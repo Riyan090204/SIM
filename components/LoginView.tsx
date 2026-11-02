@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { 
   Lock, 
@@ -30,6 +30,11 @@ export default function LoginView() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [logoError, setLogoError] = useState(false);
+  const [currentYear, setCurrentYear] = useState(2026);
+
+  useEffect(() => {
+    setCurrentYear(new Date().getFullYear());
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -286,7 +291,7 @@ export default function LoginView() {
 
         {/* Footer */}
         <p className="text-center text-xs text-slate-500 mt-6">
-          &copy; {new Date().getFullYear()} PangandaranHub Management. Hak cipta dilindungi.
+          &copy; {currentYear} PangandaranHub Management. Hak cipta dilindungi.
         </p>
       </div>
     </div>
