@@ -243,7 +243,7 @@ export default function InvoiceList({
                   className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-xs font-semibold shadow-xs transition-all active:scale-95 cursor-pointer"
                 >
                   <Printer className="w-3.5 h-3.5" />
-                  <span>Lihat / Cetak</span>
+                  <span>Lihat & Unduh PDF</span>
                 </button>
 
                 <button
@@ -374,7 +374,7 @@ export default function InvoiceList({
                       <div className="flex items-center justify-center gap-1.5">
                         <button
                           onClick={() => onViewInvoice(inv)}
-                          title="Lihat & Cetak Faktur"
+                          title="Lihat & Unduh PDF Faktur"
                           className="p-1.5 text-teal-700 hover:text-teal-900 bg-teal-50 hover:bg-teal-100 rounded-lg transition-colors border border-teal-200"
                         >
                           <Printer className="w-4 h-4" />

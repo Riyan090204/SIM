@@ -11,7 +11,9 @@ import {
   Compass, 
   Phone, 
   CreditCard,
-  ShieldCheck
+  ShieldCheck,
+  Download,
+  Loader2
 } from "lucide-react";
 
 interface InvoicePrintViewProps {
@@ -29,9 +31,46 @@ export default function InvoicePrintView({
   const [copied, setCopied] = useState(false);
   const [logoError, setLogoError] = useState(false);
   const [sigError, setSigError] = useState(false);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleDownloadPdf = async () => {
+    const element = document.getElementById("invoice-printable-card");
+    if (!element) return;
+
+    try {
+      setIsGeneratingPdf(true);
+      const html2canvas = (await import("html2canvas-pro")).default;
+      const { jsPDF } = await import("jspdf");
+
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: "#ffffff",
+      });
+
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
+
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`Invoice-${invoice.nomorInvoice}.pdf`);
+    } catch (error) {
+      console.error("Gagal mengunduh PDF:", error);
+      alert("Gagal mengunduh PDF. Silakan gunakan opsi Cetak.");
+    } finally {
+      setIsGeneratingPdf(false);
+    }
   };
 
   const handleShareWhatsApp = () => {
@@ -100,14 +139,29 @@ export default function InvoicePrintView({
               <span>WA</span>
             </button>
 
+            {/* Tombol Unduh PDF Langsung */}
+            <button
+              onClick={handleDownloadPdf}
+              disabled={isGeneratingPdf}
+              title="Unduh langsung sebagai file PDF"
+              className="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-teal-500 hover:bg-teal-400 disabled:opacity-50 text-slate-950 transition-colors cursor-pointer shadow-xs"
+            >
+              {isGeneratingPdf ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Download className="w-3.5 h-3.5" />
+              )}
+              <span>{isGeneratingPdf ? "Mengunduh..." : "Download PDF"}</span>
+            </button>
+
+            {/* Tombol Cetak Fisik */}
             <button
               onClick={handlePrint}
-              title="Cetak Faktur atau Simpan sebagai PDF"
-              className="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-teal-500 hover:bg-teal-400 text-slate-950 transition-colors"
+              title="Cetak Faktur ke Mesin Printer"
+              className="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors cursor-pointer"
             >
               <Printer className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Cetak / PDF</span>
-              <span className="sm:hidden">Cetak</span>
+              <span className="hidden sm:inline">Cetak</span>
             </button>
 
             {onEdit && (
@@ -133,7 +187,7 @@ export default function InvoicePrintView({
         {/* PRINTABLE INVOICE SHEET — Wrapped in overflow-x-auto for mobile */}
         {/* ═══════════════════════════════════════════════════════════════ */}
         <div className="overflow-x-auto print:overflow-visible">
-          <div className="print-card relative bg-white text-slate-800 min-w-[680px] sm:min-w-0">
+          <div id="invoice-printable-card" className="print-card relative bg-white text-slate-800 min-w-[680px] sm:min-w-0">
 
             {/* Left Accent Stripe (Teal Bar) */}
             <div className="absolute left-0 top-0 bottom-0 w-[5px] bg-teal-600 print:bg-teal-600" />
