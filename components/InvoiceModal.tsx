@@ -628,7 +628,7 @@ export default function InvoiceModal({
                   <input
                     type="number"
                     min="0"
-                    step="5000"
+                    step="any"
                     placeholder="0"
                     value={hargaSatuan === 0 ? "" : hargaSatuan}
                     onChange={(e) => setHargaSatuan(e.target.value === "" ? 0 : Math.max(0, parseInt(e.target.value) || 0))}
@@ -673,7 +673,7 @@ export default function InvoiceModal({
                   <input
                     type="number"
                     min="0"
-                    step="10000"
+                    step="any"
                     required
                     value={fixedTotal === 0 ? "" : fixedTotal}
                     onChange={(e) => setFixedTotal(e.target.value === "" ? 0 : Math.max(0, parseInt(e.target.value) || 0))}
@@ -776,7 +776,7 @@ export default function InvoiceModal({
                             type="number"
                             placeholder="0"
                             min="0"
-                            step="5000"
+                            step="any"
                             value={addon.total === 0 ? "" : addon.total}
                             onChange={(e) => handleUpdateService(addon.id, "total", e.target.value === "" ? 0 : Math.max(0, parseInt(e.target.value) || 0))}
                             className="w-28 px-2 py-1.5 bg-white border border-teal-300 rounded-md text-xs font-mono font-bold"
@@ -795,7 +795,7 @@ export default function InvoiceModal({
                           <input
                             type="number"
                             placeholder="0"
-                            step="5000"
+                            step="any"
                             min="0"
                             value={addon.harga === 0 ? "" : addon.harga}
                             onChange={(e) => handleUpdateService(addon.id, "harga", e.target.value === "" ? 0 : Math.max(0, parseInt(e.target.value) || 0))}
@@ -967,7 +967,7 @@ export default function InvoiceModal({
                 <input
                   type="number"
                   min="0"
-                  step="10000"
+                  step="any"
                   value={totalUangMasuk === 0 ? "" : totalUangMasuk}
                   onChange={(e) => handleUangMasukChange(e.target.value === "" ? 0 : Math.max(0, parseInt(e.target.value) || 0))}
                   placeholder="0"
@@ -987,7 +987,7 @@ export default function InvoiceModal({
                 <input
                   type="number"
                   min="0"
-                  step="10000"
+                  step="any"
                   value={labaBersih === 0 ? "" : labaBersih}
                   onChange={(e) => setLabaBersih(e.target.value === "" ? 0 : Math.max(0, parseInt(e.target.value) || 0))}
                   placeholder="0"
