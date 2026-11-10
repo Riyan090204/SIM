@@ -1,77 +1,46 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { 
-  Lock, 
-  Mail, 
-  Eye, 
-  EyeOff, 
-  LogIn, 
-  UserPlus, 
-  ShieldCheck, 
-  Compass, 
-  AlertCircle, 
-  CheckCircle2, 
-  Sparkles,
+import {
+  Lock,
+  Mail,
+  Eye,
+  EyeOff,
+  LogIn,
+  ShieldCheck,
+  Compass,
+  AlertCircle,
   Info
 } from "lucide-react";
 
 export default function LoginView() {
-  const { signIn, signUp, isFirebaseReady } = useAuth();
-  
-  const [mode, setMode] = useState<"login" | "register">("login");
+  const { signIn, isFirebaseReady } = useAuth();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  
+
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [logoError, setLogoError] = useState(false);
-  const [currentYear, setCurrentYear] = useState(2026);
-
-  useEffect(() => {
-    setCurrentYear(new Date().getFullYear());
-  }, []);
+  const currentYear = new Date().getFullYear();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
-    setSuccessMessage(null);
 
     if (!email.trim() || !password) {
       setErrorMessage("Silakan lengkapi email dan kata sandi.");
       return;
     }
 
-    if (mode === "register") {
-      if (password.length < 6) {
-        setErrorMessage("Kata sandi minimal 6 karakter.");
-        return;
-      }
-      if (password !== confirmPassword) {
-        setErrorMessage("Konfirmasi kata sandi tidak cocok.");
-        return;
-      }
-    }
-
     setIsLoading(true);
 
     try {
-      if (mode === "login") {
-        const res = await signIn(email, password);
-        if (!res.success) {
-          setErrorMessage(res.error || "Gagal masuk. Periksa kembali email dan kata sandi.");
-        }
-      } else {
-        const res = await signUp(email, password);
-        if (res.success) {
-          setSuccessMessage("Akun berhasil dibuat! Anda otomatis masuk.");
-        } else {
-          setErrorMessage(res.error || "Gagal membuat akun.");
-        }
+      const res = await signIn(email, password);
+      if (!res.success) {
+        setErrorMessage(res.error || "Gagal masuk. Periksa kembali email dan kata sandi.");
       }
     } catch (err: unknown) {
       const error = err as { message?: string };
@@ -86,10 +55,10 @@ export default function LoginView() {
       {/* Decorative Background Elements */}
       <div className="absolute top-1/4 -left-48 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-1/4 -right-48 w-96 h-96 bg-sky-500/10 rounded-full blur-3xl pointer-events-none" />
-      
+
       {/* Main Container Card */}
       <div className="w-full max-w-md relative z-10">
-        
+
         {/* Brand Header */}
         <div className="text-center mb-6">
           <div className="inline-flex items-center justify-center p-3 rounded-2xl bg-slate-800/80 border border-slate-700/80 shadow-xl mb-3 backdrop-blur-md">
@@ -112,7 +81,7 @@ export default function LoginView() {
               </div>
             )}
           </div>
-          
+
           <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-center justify-center gap-1.5">
             Pangandaran<span className="text-teal-400">Hub</span>
           </h1>
@@ -123,41 +92,11 @@ export default function LoginView() {
 
         {/* Card Box */}
         <div className="bg-slate-900/90 border border-slate-800 backdrop-blur-xl rounded-2xl shadow-2xl p-6 sm:p-8">
-          
-          {/* Mode Switch Tabs */}
-          <div className="grid grid-cols-2 gap-1 p-1 bg-slate-950/70 rounded-xl border border-slate-800 mb-6">
-            <button
-              type="button"
-              onClick={() => {
-                setMode("login");
-                setErrorMessage(null);
-                setSuccessMessage(null);
-              }}
-              className={`flex items-center justify-center gap-2 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all ${
-                mode === "login"
-                  ? "bg-teal-600 text-white shadow-md shadow-teal-600/30"
-                  : "text-slate-400 hover:text-white"
-              }`}
-            >
-              <LogIn className="w-4 h-4" />
-              <span>Masuk Tim</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setMode("register");
-                setErrorMessage(null);
-                setSuccessMessage(null);
-              }}
-              className={`flex items-center justify-center gap-2 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all ${
-                mode === "register"
-                  ? "bg-teal-600 text-white shadow-md shadow-teal-600/30"
-                  : "text-slate-400 hover:text-white"
-              }`}
-            >
-              <UserPlus className="w-4 h-4" />
-              <span>Daftar Akun</span>
-            </button>
+
+          {/* Login Header */}
+          <div className="flex items-center justify-center gap-2 mb-6 pb-5 border-b border-slate-800">
+            <LogIn className="w-4 h-4 text-teal-400" />
+            <span className="text-sm font-semibold text-slate-200">Masuk ke Dashboard</span>
           </div>
 
           {/* Alert Messages */}
@@ -165,13 +104,6 @@ export default function LoginView() {
             <div className="mb-5 p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs sm:text-sm flex items-start gap-2.5 animate-fadeIn">
               <AlertCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
               <div className="leading-relaxed">{errorMessage}</div>
-            </div>
-          )}
-
-          {successMessage && (
-            <div className="mb-5 p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs sm:text-sm flex items-start gap-2.5 animate-fadeIn">
-              <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
-              <div className="leading-relaxed">{successMessage}</div>
             </div>
           )}
 
@@ -199,7 +131,7 @@ export default function LoginView() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@pangandaranhub.com"
+                  placeholder="email@pangandaranhub.com"
                   required
                   className="w-full pl-10 pr-4 py-2.5 bg-slate-950/60 border border-slate-700 rounded-xl text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
                 />
@@ -219,7 +151,7 @@ export default function LoginView() {
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Minimal 6 karakter"
+                  placeholder="Kata sandi akun"
                   required
                   className="w-full pl-10 pr-10 py-2.5 bg-slate-950/60 border border-slate-700 rounded-xl text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
                 />
@@ -233,28 +165,6 @@ export default function LoginView() {
               </div>
             </div>
 
-            {/* Confirm Password Field (Only for Register) */}
-            {mode === "register" && (
-              <div className="animate-fadeIn">
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-                  Ulangi Kata Sandi
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
-                    <ShieldCheck className="w-4 h-4" />
-                  </div>
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Ketik ulang kata sandi"
-                    required
-                    className="w-full pl-10 pr-4 py-2.5 bg-slate-950/60 border border-slate-700 rounded-xl text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
-                  />
-                </div>
-              </div>
-            )}
-
             {/* Submit Button */}
             <button
               type="submit"
@@ -266,15 +176,10 @@ export default function LoginView() {
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   <span>Memproses...</span>
                 </>
-              ) : mode === "login" ? (
+              ) : (
                 <>
                   <LogIn className="w-4 h-4" />
                   <span>Masuk ke Dashboard</span>
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-4 h-4" />
-                  <span>Buat Akun Tim</span>
                 </>
               )}
             </button>
@@ -284,7 +189,7 @@ export default function LoginView() {
           <div className="mt-6 pt-5 border-t border-slate-800 text-center">
             <div className="inline-flex items-center gap-1.5 text-xs text-slate-400 bg-slate-950/50 px-3 py-1.5 rounded-lg border border-slate-800/80">
               <ShieldCheck className="w-3.5 h-3.5 text-teal-400 shrink-0" />
-              <span>Satu akun tim dapat dipakai bersama secara realtime</span>
+              <span>Akses eksklusif — hanya untuk tim PangandaranHub</span>
             </div>
           </div>
         </div>

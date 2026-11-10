@@ -19,6 +19,8 @@ export interface Booking {
   peserta: Participant[];
   status: "Terkonfirmasi" | "Pending" | "Selesai" | "Batal";
   createdAt: string;
+  userEmail?: string;
+  userId?: string;
 }
 
 export interface AdditionalService {
@@ -65,6 +67,8 @@ export interface Invoice {
   labaBersih: number; // Laba bersih dari invoice ini
 
   createdAt: string;
+  userEmail?: string;
+  userId?: string;
 }
 
 export interface CompanyProfile {

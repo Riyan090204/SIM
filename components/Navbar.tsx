@@ -11,6 +11,7 @@ import {
   LogOut
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { getAccountProfile } from "@/lib/accountConfig";
 
 interface NavbarProps {
   activeTab: "dashboard" | "invoices" | "bookings";
@@ -26,6 +27,7 @@ export default function Navbar({
   onOpenCreateBooking,
 }: NavbarProps) {
   const { user, signOut } = useAuth();
+  const profile = getAccountProfile(user?.email);
   const [logoError, setLogoError] = React.useState(false);
 
   return (
@@ -39,15 +41,9 @@ export default function Navbar({
             <div className="flex items-center gap-2 sm:gap-3">
               {!logoError ? (
                 <img
-                  src="/logo.PNG"
-                  alt="PangandaranHub"
-                  onError={(e) => {
-                    if ((e.currentTarget as HTMLImageElement).src.endsWith("/logo.PNG")) {
-                      (e.currentTarget as HTMLImageElement).src = "/logo.png";
-                    } else {
-                      setLogoError(true);
-                    }
-                  }}
+                  src={profile.logo}
+                  alt={profile.name}
+                  onError={() => setLogoError(true)}
                   className="w-9 h-9 sm:w-11 sm:h-11 object-contain rounded-xl shadow-xs shrink-0"
                 />
               ) : (
@@ -58,7 +54,7 @@ export default function Navbar({
               <div>
                 <div className="flex items-center gap-1.5 sm:gap-2">
                   <span className="text-lg sm:text-2xl font-black tracking-tight text-slate-900">
-                    Pangandaran<span className="text-teal-600">Hub</span>
+                    {profile.name}
                   </span>
                   <span className="hidden sm:inline-flex px-2 py-0.5 text-[11px] font-semibold rounded-full bg-teal-50 text-teal-700 border border-teal-200">
                     Tour & Travel

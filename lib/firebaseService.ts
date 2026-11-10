@@ -35,7 +35,8 @@ function sanitizeForFirestore<T extends object>(data: T): Record<string, unknown
  */
 export function subscribeBookings(
   onData: (bookings: Booking[]) => void,
-  onError?: (error: Error) => void
+  onError?: (error: Error) => void,
+  currentUserEmail?: string | null
 ): Unsubscribe {
   if (!db || !isFirebaseConfigured) {
     return () => {};
@@ -47,12 +48,22 @@ export function subscribeBookings(
       colRef,
       (snapshot) => {
         const bookings: Booking[] = [];
+        const normEmail = (currentUserEmail || "").toLowerCase().trim();
         snapshot.forEach((docSnap) => {
-          bookings.push({ id: docSnap.id, ...docSnap.data() } as Booking);
+          const item = { id: docSnap.id, ...docSnap.data() } as Booking;
+          const itemEmail = (item.userEmail || "").toLowerCase().trim();
+
+          const belongsToCurrent =
+            itemEmail === normEmail ||
+            (!itemEmail && (normEmail === "pangandaranwisata09@gmail.com" || !normEmail));
+
+          if (belongsToCurrent) {
+            bookings.push(item);
+          }
         });
         // Urutkan secara client-side agar tidak memerlukan Firestore composite index
         bookings.sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
-        console.log(`[Firestore] Bookings snapshot loaded: ${bookings.length} item(s)`);
+        console.log(`[Firestore] Bookings snapshot loaded for ${normEmail}: ${bookings.length} item(s)`);
         onData(bookings);
       },
       (error) => {
@@ -69,11 +80,20 @@ export function subscribeBookings(
 /**
  * Menyimpan data booking ke Firestore (Create atau Update).
  */
-export async function saveBookingToFirestore(booking: Booking): Promise<void> {
+export async function saveBookingToFirestore(
+  booking: Booking,
+  userEmail?: string | null,
+  userId?: string | null
+): Promise<void> {
   if (!db || !isFirebaseConfigured) {
     throw new Error("Firebase belum dikonfigurasi.");
   }
-  const cleanData = sanitizeForFirestore(booking);
+  const dataToSave: Booking = {
+    ...booking,
+    userEmail: booking.userEmail || userEmail || undefined,
+    userId: booking.userId || userId || undefined,
+  };
+  const cleanData = sanitizeForFirestore(dataToSave);
   const docRef = doc(db, "bookings", booking.id);
   await setDoc(docRef, cleanData, { merge: true });
 }
@@ -97,7 +117,8 @@ export async function deleteBookingFromFirestore(id: string): Promise<void> {
  */
 export function subscribeInvoices(
   onData: (invoices: Invoice[]) => void,
-  onError?: (error: Error) => void
+  onError?: (error: Error) => void,
+  currentUserEmail?: string | null
 ): Unsubscribe {
   if (!db || !isFirebaseConfigured) {
     return () => {};
@@ -109,12 +130,22 @@ export function subscribeInvoices(
       colRef,
       (snapshot) => {
         const invoices: Invoice[] = [];
+        const normEmail = (currentUserEmail || "").toLowerCase().trim();
         snapshot.forEach((docSnap) => {
-          invoices.push({ id: docSnap.id, ...docSnap.data() } as Invoice);
+          const item = { id: docSnap.id, ...docSnap.data() } as Invoice;
+          const itemEmail = (item.userEmail || "").toLowerCase().trim();
+
+          const belongsToCurrent =
+            itemEmail === normEmail ||
+            (!itemEmail && (normEmail === "pangandaranwisata09@gmail.com" || !normEmail));
+
+          if (belongsToCurrent) {
+            invoices.push(item);
+          }
         });
         // Urutkan secara client-side
         invoices.sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
-        console.log(`[Firestore] Invoices snapshot loaded: ${invoices.length} item(s)`);
+        console.log(`[Firestore] Invoices snapshot loaded for ${normEmail}: ${invoices.length} item(s)`);
         onData(invoices);
       },
       (error) => {
@@ -131,11 +162,20 @@ export function subscribeInvoices(
 /**
  * Menyimpan data invoice ke Firestore (Create atau Update).
  */
-export async function saveInvoiceToFirestore(invoice: Invoice): Promise<void> {
+export async function saveInvoiceToFirestore(
+  invoice: Invoice,
+  userEmail?: string | null,
+  userId?: string | null
+): Promise<void> {
   if (!db || !isFirebaseConfigured) {
     throw new Error("Firebase belum dikonfigurasi.");
   }
-  const cleanData = sanitizeForFirestore(invoice);
+  const dataToSave: Invoice = {
+    ...invoice,
+    userEmail: invoice.userEmail || userEmail || undefined,
+    userId: invoice.userId || userId || undefined,
+  };
+  const cleanData = sanitizeForFirestore(dataToSave);
   const docRef = doc(db, "invoices", invoice.id);
   await setDoc(docRef, cleanData, { merge: true });
 }

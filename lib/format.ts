@@ -1,4 +1,5 @@
-import { Invoice, PANGANDARAN_HUB_PROFILE } from "@/types";
+import { Invoice } from "@/types";
+import { getAccountProfile } from "./accountConfig";
 
 export function formatRupiah(amount: number): string {
   if (isNaN(amount) || amount === null || amount === undefined) return "Rp 0";
@@ -25,7 +26,7 @@ export function formatDateIndo(dateStr: string): string {
 }
 
 export function generateWhatsAppMessage(inv: Invoice): string {
-  const profile = PANGANDARAN_HUB_PROFILE;
+  const profile = getAccountProfile(inv.userEmail);
   return `*INVOICE PEMESANAN TRIP - ${profile.name.toUpperCase()}*
 ----------------------------------------
 *No. Invoice:* ${inv.nomorInvoice}

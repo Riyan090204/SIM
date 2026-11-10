@@ -3,13 +3,13 @@
 import React, { useState, useMemo } from "react";
 import { Invoice } from "@/types";
 import { formatRupiah, formatDateIndo, generateWhatsAppMessage } from "@/lib/format";
-import { 
-  Search, 
-  Plus, 
-  Printer, 
-  Edit3, 
-  Trash2, 
-  Share2, 
+import {
+  Search,
+  Plus,
+  Printer,
+  Edit3,
+  Trash2,
+  Share2,
   Calendar,
   AlertCircle,
   Phone,
@@ -86,7 +86,7 @@ export default function InvoiceList({
             Daftar Faktur & Invoice
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-0.5 sm:mt-1">
-            Kelola, cetak, dan bagikan invoice ke tamu PangandaranHub beserta rincian pembayarannya.
+            Kelola, cetak, dan bagikan invoice ke tamu beserta rincian pembayarannya.
           </p>
         </div>
 
@@ -182,13 +182,12 @@ export default function InvoiceList({
                   </div>
                 </div>
                 <span
-                  className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
-                    inv.status === "Lunas"
+                  className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${inv.status === "Lunas"
                       ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                       : inv.status === "DP (Down Payment)"
-                      ? "bg-sky-50 text-sky-700 border border-sky-200"
-                      : "bg-amber-50 text-amber-700 border border-amber-200"
-                  }`}
+                        ? "bg-sky-50 text-sky-700 border border-sky-200"
+                        : "bg-amber-50 text-amber-700 border border-amber-200"
+                    }`}
                 >
                   {inv.status}
                 </span>
@@ -343,13 +342,12 @@ export default function InvoiceList({
                     {/* Status */}
                     <td className="px-5 py-4 text-center">
                       <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-                          inv.status === "Lunas"
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${inv.status === "Lunas"
                             ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                             : inv.status === "DP (Down Payment)"
-                            ? "bg-sky-50 text-sky-700 border border-sky-200"
-                            : "bg-amber-50 text-amber-700 border border-amber-200"
-                        }`}
+                              ? "bg-sky-50 text-sky-700 border border-sky-200"
+                              : "bg-amber-50 text-amber-700 border border-amber-200"
+                          }`}
                       >
                         {inv.status}
                       </span>

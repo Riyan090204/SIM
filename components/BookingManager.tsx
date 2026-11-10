@@ -136,6 +136,8 @@ export default function BookingManager({
       peserta: cleanedPeserta,
       status,
       createdAt: editingBooking ? editingBooking.createdAt : new Date().toISOString(),
+      userEmail: editingBooking?.userEmail,
+      userId: editingBooking?.userId,
     };
 
     onSaveBooking(saved);

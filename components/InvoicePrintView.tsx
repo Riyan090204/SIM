@@ -1,7 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import { Invoice, PANGANDARAN_HUB_PROFILE } from "@/types";
+import { Invoice } from "@/types";
+import { getAccountProfile } from "@/lib/accountConfig";
+import { useAuth } from "@/context/AuthContext";
 import { formatRupiah, formatDateIndo, generateWhatsAppMessage } from "@/lib/format";
 import { 
   Printer, 
@@ -27,7 +29,8 @@ export default function InvoicePrintView({
   onClose,
   onEdit,
 }: InvoicePrintViewProps) {
-  const profile = PANGANDARAN_HUB_PROFILE;
+  const { user } = useAuth();
+  const profile = getAccountProfile(invoice.userEmail || user?.email);
   const [copied, setCopied] = useState(false);
   const [logoError, setLogoError] = useState(false);
   const [sigError, setSigError] = useState(false);
@@ -201,15 +204,9 @@ export default function InvoicePrintView({
               <div className="flex items-start gap-3">
                 {!logoError ? (
                   <img
-                    src="/logo.PNG"
+                    src={profile.logo}
                     alt={profile.name}
-                    onError={(e) => {
-                      if ((e.currentTarget as HTMLImageElement).src.endsWith("/logo.PNG")) {
-                        (e.currentTarget as HTMLImageElement).src = "/logo.png";
-                      } else {
-                        setLogoError(true);
-                      }
-                    }}
+                    onError={() => setLogoError(true)}
                     className="w-12 h-12 sm:w-14 sm:h-14 print:w-11 print:h-11 object-contain rounded-lg shadow-sm"
                   />
                 ) : (
@@ -219,10 +216,10 @@ export default function InvoicePrintView({
                 )}
                 <div>
                   <h1 className="text-xl sm:text-2xl print:text-lg font-black tracking-tight text-slate-900 leading-none">
-                    Pangandaran<span className="text-teal-600">Hub</span>
+                    {profile.name}
                   </h1>
                   <p className="text-[9px] print:text-[8px] font-bold text-slate-400 tracking-[0.15em] uppercase mt-0.5">
-                    Tour & Travel Organizer
+                    {profile.brandSubtitle}
                   </p>
                   <div className="mt-1.5 print:mt-1 text-[10px] print:text-[9px] text-slate-500 leading-relaxed">
                     <div>{profile.address}</div>
@@ -460,15 +457,9 @@ export default function InvoicePrintView({
                   {!sigError ? (
                     <div className="relative flex items-center justify-center -mb-4 sm:-mb-5 print:-mb-4 z-10 pointer-events-none">
                       <img
-                        src="/signature.PNG"
+                        src={profile.signature}
                         alt="Tanda Tangan & Stempel Resmi"
-                        onError={(e) => {
-                          if ((e.currentTarget as HTMLImageElement).src.endsWith("/signature.PNG")) {
-                            (e.currentTarget as HTMLImageElement).src = "/signature.png";
-                          } else {
-                            setSigError(true);
-                          }
-                        }}
+                        onError={() => setSigError(true)}
                         className="h-16 sm:h-20 print:h-16 w-auto object-contain mix-blend-multiply"
                       />
                     </div>

@@ -3,16 +3,18 @@
 import React, { useState, useMemo } from "react";
 import { Invoice } from "@/types";
 import { formatRupiah, formatDateIndo } from "@/lib/format";
-import { 
-  DollarSign, 
-  TrendingUp, 
-  Wallet, 
-  AlertCircle, 
-  CheckCircle2, 
-  Clock, 
-  Calendar, 
-  Users, 
-  FileText, 
+import { useAuth } from "@/context/AuthContext";
+import { getAccountProfile } from "@/lib/accountConfig";
+import {
+  DollarSign,
+  TrendingUp,
+  Wallet,
+  AlertCircle,
+  CheckCircle2,
+  Clock,
+  Calendar,
+  Users,
+  FileText,
   ArrowUpRight
 } from "lucide-react";
 
@@ -27,6 +29,9 @@ export default function FinancialDashboard({
   onViewInvoice,
   onOpenCreateInvoice,
 }: FinancialDashboardProps) {
+  const { user } = useAuth();
+  const profile = getAccountProfile(user?.email);
+
   // Filter state (Month & Year)
   const [selectedMonth, setSelectedMonth] = useState<string>("all"); // "all" or "01" - "12"
   const [selectedYear, setSelectedYear] = useState<string>("2026");
@@ -132,7 +137,7 @@ export default function FinancialDashboard({
         <div>
           <div className="flex items-center gap-1.5 text-teal-600 text-xs font-semibold uppercase tracking-wider mb-1">
             <TrendingUp className="w-4 h-4" />
-            <span>PangandaranHub Financial Overview</span>
+            <span>{profile.name} Financial Overview</span>
           </div>
           <h1 className="text-xl sm:text-3xl font-bold text-slate-900 tracking-tight">
             Ringkasan Uang Masuk & Laba Bersih
@@ -436,13 +441,12 @@ export default function FinancialDashboard({
                     </div>
                   </div>
                   <span
-                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                      inv.status === "Lunas"
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${inv.status === "Lunas"
                         ? "bg-emerald-100 text-emerald-800"
                         : inv.status === "DP (Down Payment)"
-                        ? "bg-sky-100 text-sky-800"
-                        : "bg-amber-100 text-amber-800"
-                    }`}
+                          ? "bg-sky-100 text-sky-800"
+                          : "bg-amber-100 text-amber-800"
+                      }`}
                   >
                     {inv.status}
                   </span>
@@ -527,13 +531,12 @@ export default function FinancialDashboard({
                     </td>
                     <td className="px-6 py-4 text-center">
                       <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-                          inv.status === "Lunas"
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${inv.status === "Lunas"
                             ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                             : inv.status === "DP (Down Payment)"
-                            ? "bg-sky-50 text-sky-700 border border-sky-200"
-                            : "bg-amber-50 text-amber-700 border border-amber-200"
-                        }`}
+                              ? "bg-sky-50 text-sky-700 border border-sky-200"
+                              : "bg-amber-50 text-amber-700 border border-amber-200"
+                          }`}
                       >
                         {inv.status}
                       </span>

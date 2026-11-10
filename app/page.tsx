@@ -9,7 +9,8 @@ import InvoiceModal from "@/components/InvoiceModal";
 import InvoicePrintView from "@/components/InvoicePrintView";
 import LoginView from "@/components/LoginView";
 import { useAuth } from "@/context/AuthContext";
-import { Invoice, Booking, PANGANDARAN_HUB_PROFILE } from "@/types";
+import { Invoice, Booking } from "@/types";
+import { getAccountProfile } from "@/lib/accountConfig";
 import { isFirebaseConfigured } from "@/lib/firebase";
 import {
   subscribeBookings,
@@ -108,7 +109,8 @@ export default function Home() {
           console.error("Firebase bookings error:", err);
           setIsLoaded(true);
           setFirestoreError(err.message || "Gagal memuat data dari Firestore");
-        }
+        },
+        user.email
       );
 
       unsubInvoices = subscribeInvoices(
@@ -121,7 +123,8 @@ export default function Home() {
           console.error("Firebase invoices error:", err);
           setIsLoaded(true);
           setFirestoreError(err.message || "Gagal memuat data dari Firestore");
-        }
+        },
+        user.email
       );
     }
 
@@ -180,7 +183,7 @@ export default function Home() {
   const handleSaveInvoice = async (saved: Invoice) => {
     if (isFirebaseConfigured) {
       try {
-        await saveInvoiceToFirestore(saved);
+        await saveInvoiceToFirestore(saved, user?.email, user?.uid);
       } catch (err) {
         console.error("Gagal simpan invoice ke Firestore:", err);
         alert("Gagal menyimpan ke Firestore. Pastikan koneksi internet & rules Firestore aktif.");
@@ -230,7 +233,7 @@ export default function Home() {
   const handleSaveBooking = async (saved: Booking) => {
     if (isFirebaseConfigured) {
       try {
-        await saveBookingToFirestore(saved);
+        await saveBookingToFirestore(saved, user?.email, user?.uid);
       } catch (err) {
         console.error("Gagal simpan booking ke Firestore:", err);
         alert("Gagal menyimpan ke Firestore. Pastikan Firestore aktif.");
@@ -398,16 +401,23 @@ export default function Home() {
       {/* Footer */}
       <footer className="no-print bg-white border-t border-slate-200 py-6 text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
-          <div className="flex items-center gap-2">
-            <Compass className="w-4 h-4 text-teal-600" />
-            <span className="font-semibold text-slate-800">
-              {PANGANDARAN_HUB_PROFILE.name}
-            </span>
-            <span>— Sistem Invoice & Manajemen Finansial Wisata</span>
-          </div>
-          <div className="flex items-center gap-1 text-slate-400">
-            <span>Rekening Resmi BCA: 2080974801 a.n RIYAN NURHIDAYAT</span>
-          </div>
+          {(() => {
+            const profile = getAccountProfile(user?.email);
+            return (
+              <>
+                <div className="flex items-center gap-2">
+                  <Compass className="w-4 h-4 text-teal-600" />
+                  <span className="font-semibold text-slate-800">
+                    {profile.name}
+                  </span>
+                  <span>— Sistem Invoice & Manajemen Finansial Wisata</span>
+                </div>
+                <div className="flex items-center gap-1 text-slate-400">
+                  <span>Rekening Resmi {profile.bankName}: {profile.bankAccountNumber} a.n {profile.bankAccountName}</span>
+                </div>
+              </>
+            );
+          })()}
         </div>
       </footer>
 
