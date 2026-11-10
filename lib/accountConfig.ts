@@ -46,7 +46,7 @@ export const ACCOUNT_PROFILES: Record<string, AccountProfile> = {
     brandSubtitle: "Tour & Travel Organizer",
     tagline: "Your Ultimate Pangandaran Travel Partner",
     address: "Pangandaran, Jawa Barat, Indonesia",
-    phone: "08817742021",
+    phone: "085703197566",
     email: "pangandarannaturally@gmail.com",
     website: "",
     invoicePrefix: "PN",

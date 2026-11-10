@@ -314,8 +314,8 @@ export default function InvoiceModal({
       sisaTagihan,
       labaBersih: Number(labaBersih) || 0,
       createdAt: initialInvoice?.createdAt || new Date().toISOString(),
-      userEmail: initialInvoice?.userEmail || selectedBookingForInvoice?.userEmail,
-      userId: initialInvoice?.userId || selectedBookingForInvoice?.userId,
+      userEmail: initialInvoice?.userEmail || selectedBookingForInvoice?.userEmail || user?.email || undefined,
+      userId: initialInvoice?.userId || selectedBookingForInvoice?.userId || user?.uid || undefined,
     };
 
     onSave(newInvoice);

@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Booking, Participant } from "@/types";
 import { formatDateIndo } from "@/lib/format";
+import { useAuth } from "@/context/AuthContext";
 import { 
   Users, 
   Plus, 
@@ -36,6 +37,7 @@ export default function BookingManager({
   isCreateOpen,
   setIsCreateOpen,
 }: BookingManagerProps) {
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
 
@@ -136,8 +138,8 @@ export default function BookingManager({
       peserta: cleanedPeserta,
       status,
       createdAt: editingBooking ? editingBooking.createdAt : new Date().toISOString(),
-      userEmail: editingBooking?.userEmail,
-      userId: editingBooking?.userId,
+      userEmail: editingBooking?.userEmail || user?.email || undefined,
+      userId: editingBooking?.userId || user?.uid || undefined,
     };
 
     onSaveBooking(saved);

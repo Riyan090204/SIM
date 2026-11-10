@@ -134,10 +134,13 @@ export function subscribeInvoices(
         snapshot.forEach((docSnap) => {
           const item = { id: docSnap.id, ...docSnap.data() } as Invoice;
           const itemEmail = (item.userEmail || "").toLowerCase().trim();
+          const isNaturally = normEmail === "pangandarannaturally@gmail.com";
+          const isHub = normEmail === "pangandaranwisata09@gmail.com" || !normEmail;
 
           const belongsToCurrent =
             itemEmail === normEmail ||
-            (!itemEmail && (normEmail === "pangandaranwisata09@gmail.com" || !normEmail));
+            (isNaturally && (item.nomorInvoice?.includes("-PN-") || false)) ||
+            (isHub && (!itemEmail || item.nomorInvoice?.includes("-PH-")));
 
           if (belongsToCurrent) {
             invoices.push(item);
