@@ -55,5 +55,5 @@ Atas Nama: ${profile.bankAccountName}
 4. Mohon lakukan verifikasi faktur ini dengan tim kami di lokasi yang telah ditetapkan.
 
 Terima kasih atas kepercayaannya bersama *${profile.name}*!
-Info: ${profile.phone} | ${profile.website}`;
+Info: ${profile.phone}${profile.website ? ` | ${profile.website}` : ""}`;
 }

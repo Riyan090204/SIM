@@ -6,6 +6,7 @@ export interface AccountProfile {
   phone: string;
   email: string;
   website: string;
+  invoicePrefix: string;
   bankName: string;
   bankAccountNumber: string;
   bankAccountName: string;
@@ -25,6 +26,7 @@ export const ACCOUNT_PROFILES: Record<string, AccountProfile> = {
     phone: "08817742021",
     email: "pangandaranwisata09@gmail.com",
     website: "pangandaranhub.com",
+    invoicePrefix: "PH",
     bankName: "BCA",
     bankAccountNumber: "2080974801",
     bankAccountName: "RIYAN NURHIDAYAT",
@@ -46,7 +48,8 @@ export const ACCOUNT_PROFILES: Record<string, AccountProfile> = {
     address: "Pangandaran, Jawa Barat, Indonesia",
     phone: "08817742021",
     email: "pangandarannaturally@gmail.com",
-    website: "pangandarannaturally.com",
+    website: "",
+    invoicePrefix: "PN",
     bankName: "BCA",
     bankAccountNumber: "1381563206",
     bankAccountName: "DINDIN WAHYU MAULANA",

@@ -227,7 +227,9 @@ export default function InvoicePrintView({
                       <span>📞 {profile.phone}</span>
                       <span>✉ {profile.email}</span>
                     </div>
-                    <div className="text-teal-700 font-semibold">🌐 {profile.website}</div>
+                    {profile.website ? (
+                      <div className="text-teal-700 font-semibold">🌐 {profile.website}</div>
+                    ) : null}
                   </div>
                 </div>
               </div>

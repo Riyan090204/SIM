@@ -3,13 +3,15 @@
 import React, { useState } from "react";
 import { Invoice, Booking, AdditionalService, PaymentStatus } from "@/types";
 import { formatRupiah } from "@/lib/format";
-import { 
-  X, 
-  Plus, 
-  Trash2, 
-  Sparkles, 
-  DollarSign, 
-  Wallet, 
+import { useAuth } from "@/context/AuthContext";
+import { getAccountProfile, AccountProfile } from "@/lib/accountConfig";
+import {
+  X,
+  Plus,
+  Trash2,
+  Sparkles,
+  DollarSign,
+  Wallet,
   Receipt,
   AlertCircle,
   CheckCircle2,
@@ -29,8 +31,11 @@ interface InvoiceModalProps {
 
 function getInitialInvoiceData(
   initialInvoice?: Invoice | null,
-  selectedBooking?: Booking | null
+  selectedBooking?: Booking | null,
+  profile?: AccountProfile
 ) {
+  const prefix = profile?.invoicePrefix || "PH";
+
   if (initialInvoice) {
     return {
       nomorInvoice: initialInvoice.nomorInvoice || "",
@@ -59,7 +64,7 @@ function getInitialInvoiceData(
     const ym = today.toISOString().slice(0, 7).replace("-", "");
     const rand = Math.floor(100 + Math.random() * 900);
     return {
-      nomorInvoice: `INV-PH-${ym}-${rand}`,
+      nomorInvoice: `INV-${prefix}-${ym}-${rand}`,
       tanggal: new Date().toISOString().split("T")[0],
       status: "Belum Bayar" as PaymentStatus,
       bookingId: selectedBooking.id,
@@ -69,7 +74,7 @@ function getInitialInvoiceData(
       emailPemesan: selectedBooking.email || "",
       paketLayanan: selectedBooking.pilihanPaket,
       tanggalPelaksanaan: selectedBooking.tanggalTrip,
-      deskripsi: "Paket wisata PangandaranHub include guide, tiket masuk, peralatan, dan asuransi.",
+      deskripsi: `Paket wisata ${profile?.name || "wisata"} include guide, tiket masuk, peralatan, dan asuransi.`,
       keterangan: `Booking #${selectedBooking.bookingCode} | Kendaraan: ${selectedBooking.nomorKendaraan || "-"}`,
       tipeHitungan: "satuan" as const,
       qty: selectedBooking.peserta && selectedBooking.peserta.length > 0 ? selectedBooking.peserta.length : 1,
@@ -84,7 +89,7 @@ function getInitialInvoiceData(
   const ym = today.toISOString().slice(0, 7).replace("-", "");
   const rand = Math.floor(100 + Math.random() * 900);
   return {
-    nomorInvoice: `INV-PH-${ym}-${rand}`,
+    nomorInvoice: `INV-${prefix}-${ym}-${rand}`,
     tanggal: new Date().toISOString().split("T")[0],
     status: "Belum Bayar" as PaymentStatus,
     bookingId: "",
@@ -114,7 +119,10 @@ export default function InvoiceModal({
   bookings,
   selectedBookingForInvoice,
 }: InvoiceModalProps) {
-  const initial = getInitialInvoiceData(initialInvoice, selectedBookingForInvoice);
+  const { user } = useAuth();
+  const currentEmail = initialInvoice?.userEmail || selectedBookingForInvoice?.userEmail || user?.email;
+  const profile = getAccountProfile(currentEmail);
+  const initial = getInitialInvoiceData(initialInvoice, selectedBookingForInvoice, profile);
 
   // Form State
   const [nomorInvoice, setNomorInvoice] = useState(initial.nomorInvoice);
@@ -133,7 +141,7 @@ export default function InvoiceModal({
   const [tanggalPelaksanaan, setTanggalPelaksanaan] = useState(initial.tanggalPelaksanaan);
   const [deskripsi, setDeskripsi] = useState(initial.deskripsi);
   const [keterangan, setKeterangan] = useState(initial.keterangan);
-  
+
   // Tipe Hitungan: 'satuan' (Qty x Harga) vs 'non-satuan' (Tanpa Satuan / -)
   const [tipeHitungan, setTipeHitungan] = useState<"satuan" | "non-satuan">(initial.tipeHitungan || "satuan");
   const [qty, setQty] = useState<number>(initial.qty);
@@ -164,7 +172,7 @@ export default function InvoiceModal({
     setFixedTotal((b.peserta && b.peserta.length > 0 ? b.peserta.length : 1) * 200000);
     setTanggal(new Date().toISOString().split("T")[0]);
     setKeterangan(`Booking #${b.bookingCode} | Kendaraan: ${b.nomorKendaraan || "-"}`);
-    setDeskripsi("Paket wisata PangandaranHub include guide, tiket masuk, peralatan, dan asuransi.");
+    setDeskripsi(`Paket wisata ${profile.name} include guide, tiket masuk, peralatan, dan asuransi.`);
     setTotalUangMasuk(0);
     setLabaBersih(250000);
     setTipeHitungan("satuan");
@@ -230,7 +238,7 @@ export default function InvoiceModal({
   };
 
   // Calculations
-  const mainPackageTotal = tipeHitungan === "satuan" 
+  const mainPackageTotal = tipeHitungan === "satuan"
     ? (Number(qty) || 0) * (Number(hargaSatuan) || 0)
     : (Number(fixedTotal) || 0);
 
@@ -365,14 +373,14 @@ export default function InvoiceModal({
         )}
 
         {/* Form Body */}
-        <form 
-          onSubmit={handleSubmit} 
+        <form
+          onSubmit={handleSubmit}
           onKeyDown={handleFormKeyDown}
           className="p-4 sm:p-6 space-y-4 sm:space-y-6 max-h-[85vh] overflow-y-auto text-xs sm:text-sm"
         >
 
 
-          
+
           {/* Option: Import from Booking */}
           {!initialInvoice && bookings.length > 0 && (
             <div className="p-3.5 bg-teal-50/80 rounded-xl border border-teal-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
@@ -406,7 +414,7 @@ export default function InvoiceModal({
                 required
                 value={nomorInvoice}
                 onChange={(e) => setNomorInvoice(e.target.value)}
-                placeholder="INV-PH-202610-001"
+                placeholder={`INV-${profile.invoicePrefix}-202610-001`}
                 className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:bg-white focus:outline-teal-600 font-mono font-bold text-xs"
               />
             </div>
@@ -534,11 +542,10 @@ export default function InvoiceModal({
                 <button
                   type="button"
                   onClick={() => setTipeHitungan("satuan")}
-                  className={`px-2.5 py-1 rounded-md font-medium transition-all ${
-                    tipeHitungan === "satuan"
+                  className={`px-2.5 py-1 rounded-md font-medium transition-all ${tipeHitungan === "satuan"
                       ? "bg-teal-600 text-white font-semibold shadow-2xs"
                       : "text-slate-600 hover:bg-slate-100"
-                  }`}
+                    }`}
                 >
                   Hitung per Pax / Satuan
                 </button>
@@ -550,11 +557,10 @@ export default function InvoiceModal({
                       setFixedTotal(qty * hargaSatuan);
                     }
                   }}
-                  className={`px-2.5 py-1 rounded-md font-medium transition-all ${
-                    tipeHitungan === "non-satuan"
+                  className={`px-2.5 py-1 rounded-md font-medium transition-all ${tipeHitungan === "non-satuan"
                       ? "bg-teal-600 text-white font-semibold shadow-2xs"
                       : "text-slate-600 hover:bg-slate-100"
-                  }`}
+                    }`}
                 >
                   Tanpa Satuan / Borongan (-)
                 </button>
@@ -879,11 +885,10 @@ export default function InvoiceModal({
                 <button
                   type="button"
                   onClick={() => handleQuickSetPayment(0, "Belum Bayar")}
-                  className={`text-xs px-2.5 py-1.5 rounded-lg border font-medium transition-all ${
-                    totalUangMasuk === 0
+                  className={`text-xs px-2.5 py-1.5 rounded-lg border font-medium transition-all ${totalUangMasuk === 0
                       ? "bg-amber-500/30 text-amber-300 border-amber-400/50 font-bold ring-1 ring-amber-400/30"
                       : "bg-white/10 text-slate-300 border-white/10 hover:bg-white/20"
-                  }`}
+                    }`}
                 >
                   Belum Bayar (Rp 0)
                 </button>
@@ -892,11 +897,10 @@ export default function InvoiceModal({
                 <button
                   type="button"
                   onClick={() => handleQuickSetPayment(Math.round(grandTotal * 0.2), "DP (Down Payment)")}
-                  className={`text-xs px-2.5 py-1.5 rounded-lg border font-medium transition-all ${
-                    totalUangMasuk === Math.round(grandTotal * 0.2) && grandTotal > 0
+                  className={`text-xs px-2.5 py-1.5 rounded-lg border font-medium transition-all ${totalUangMasuk === Math.round(grandTotal * 0.2) && grandTotal > 0
                       ? "bg-sky-500/40 text-sky-300 border-sky-400/60 font-bold ring-1 ring-sky-400/40"
                       : "bg-white/10 text-slate-300 border-white/10 hover:bg-white/20"
-                  }`}
+                    }`}
                 >
                   DP 20% ({formatRupiah(Math.round(grandTotal * 0.2))})
                 </button>
@@ -905,11 +909,10 @@ export default function InvoiceModal({
                 <button
                   type="button"
                   onClick={() => handleQuickSetPayment(Math.round(grandTotal * 0.3), "DP (Down Payment)")}
-                  className={`text-xs px-2.5 py-1.5 rounded-lg border font-medium transition-all ${
-                    totalUangMasuk === Math.round(grandTotal * 0.3) && grandTotal > 0
+                  className={`text-xs px-2.5 py-1.5 rounded-lg border font-medium transition-all ${totalUangMasuk === Math.round(grandTotal * 0.3) && grandTotal > 0
                       ? "bg-sky-500/40 text-sky-300 border-sky-400/60 font-bold ring-1 ring-sky-400/40"
                       : "bg-white/10 text-slate-300 border-white/10 hover:bg-white/20"
-                  }`}
+                    }`}
                 >
                   DP 30% ({formatRupiah(Math.round(grandTotal * 0.3))})
                 </button>
@@ -918,11 +921,10 @@ export default function InvoiceModal({
                 <button
                   type="button"
                   onClick={() => handleQuickSetPayment(Math.round(grandTotal * 0.5), "DP (Down Payment)")}
-                  className={`text-xs px-2.5 py-1.5 rounded-lg border font-medium transition-all ${
-                    totalUangMasuk === Math.round(grandTotal * 0.5) && grandTotal > 0
+                  className={`text-xs px-2.5 py-1.5 rounded-lg border font-medium transition-all ${totalUangMasuk === Math.round(grandTotal * 0.5) && grandTotal > 0
                       ? "bg-sky-500/40 text-sky-300 border-sky-400/60 font-bold ring-1 ring-sky-400/40"
                       : "bg-white/10 text-slate-300 border-white/10 hover:bg-white/20"
-                  }`}
+                    }`}
                 >
                   DP 50% ({formatRupiah(Math.round(grandTotal * 0.5))})
                 </button>
@@ -931,11 +933,10 @@ export default function InvoiceModal({
                 <button
                   type="button"
                   onClick={() => handleQuickSetPayment(grandTotal, "Lunas")}
-                  className={`text-xs px-3 py-1.5 rounded-lg border font-bold transition-all ${
-                    totalUangMasuk === grandTotal && grandTotal > 0
+                  className={`text-xs px-3 py-1.5 rounded-lg border font-bold transition-all ${totalUangMasuk === grandTotal && grandTotal > 0
                       ? "bg-emerald-500/40 text-emerald-200 border-emerald-400/70 ring-2 ring-emerald-500/50"
                       : "bg-emerald-600/30 text-emerald-300 border-emerald-500/30 hover:bg-emerald-600/50"
-                  }`}
+                    }`}
                 >
                   ✓ Lunas 100% ({formatRupiah(grandTotal)})
                 </button>
