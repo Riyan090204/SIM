@@ -306,34 +306,49 @@ export default function InvoicePrintView({
                 </tr>
               </thead>
               <tbody>
-                {/* Main Package */}
-                <tr className="border-b border-slate-200">
-                  <td className="px-3 py-2 print:py-1.5">
-                    <div className="font-bold text-slate-900">{invoice.paketLayanan}</div>
-                    {invoice.deskripsi && (
-                      <div className="text-[9px] print:text-[8px] text-slate-400 leading-tight mt-0.5 max-w-md">
-                        {invoice.deskripsi}
-                      </div>
-                    )}
-                  </td>
-                  <td className="px-2 py-2 print:py-1.5 text-center font-semibold text-slate-700">
-                    {invoice.tipeHitungan === "non-satuan" ? (
-                      <span className="text-slate-300">—</span>
-                    ) : (
-                      <span>{invoice.qty} <span className="text-[9px] text-slate-400">Pax</span></span>
-                    )}
-                  </td>
-                  <td className="px-3 py-2 print:py-1.5 text-right font-medium text-slate-600">
-                    {invoice.tipeHitungan === "non-satuan" ? (
-                      <span className="text-slate-300">—</span>
-                    ) : (
-                      formatRupiah(invoice.hargaSatuan)
-                    )}
-                  </td>
-                  <td className="px-3 py-2 print:py-1.5 text-right font-bold text-slate-900">
-                    {formatRupiah(invoice.total)}
-                  </td>
-                </tr>
+                {/* Main Tour Packages (Single or Multi-Package) */}
+                {((invoice.paketItems && invoice.paketItems.length > 0)
+                  ? invoice.paketItems
+                  : [
+                      {
+                        id: "main-default",
+                        nama: invoice.paketLayanan,
+                        deskripsi: invoice.deskripsi,
+                        tipeHitungan: invoice.tipeHitungan,
+                        qty: invoice.qty,
+                        hargaSatuan: invoice.hargaSatuan,
+                        total: invoice.total,
+                      },
+                    ]
+                ).map((pkg, idx) => (
+                  <tr key={pkg.id || idx} className="border-b border-slate-200">
+                    <td className="px-3 py-2 print:py-1.5">
+                      <div className="font-bold text-slate-900">{pkg.nama}</div>
+                      {pkg.deskripsi && (
+                        <div className="text-[9px] print:text-[8px] text-slate-400 leading-tight mt-0.5 max-w-md">
+                          {pkg.deskripsi}
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-2 py-2 print:py-1.5 text-center font-semibold text-slate-700">
+                      {pkg.tipeHitungan === "non-satuan" ? (
+                        <span className="text-slate-300">—</span>
+                      ) : (
+                        <span>{pkg.qty} <span className="text-[9px] text-slate-400">Pax</span></span>
+                      )}
+                    </td>
+                    <td className="px-3 py-2 print:py-1.5 text-right font-medium text-slate-600">
+                      {pkg.tipeHitungan === "non-satuan" ? (
+                        <span className="text-slate-300">—</span>
+                      ) : (
+                        formatRupiah(pkg.hargaSatuan)
+                      )}
+                    </td>
+                    <td className="px-3 py-2 print:py-1.5 text-right font-bold text-slate-900">
+                      {formatRupiah(pkg.total)}
+                    </td>
+                  </tr>
+                ))}
 
                 {/* Additional Services */}
                 {invoice.layananTambahan && invoice.layananTambahan.length > 0 && (

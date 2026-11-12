@@ -1,7 +1,8 @@
 "use client";
+/* eslint-disable react-hooks/purity */
 
 import React, { useState } from "react";
-import { Invoice, Booking, AdditionalService, PaymentStatus } from "@/types";
+import { Invoice, Booking, AdditionalService, PaymentStatus, TourPackageItem } from "@/types";
 import { formatRupiah } from "@/lib/format";
 import { useAuth } from "@/context/AuthContext";
 import { getAccountProfile, AccountProfile } from "@/lib/accountConfig";
@@ -39,6 +40,21 @@ function getInitialInvoiceData(
   const prefix = profile?.invoicePrefix || "PH";
 
   if (initialInvoice) {
+    const existingPaketItems: TourPackageItem[] =
+      initialInvoice.paketItems && initialInvoice.paketItems.length > 0
+        ? initialInvoice.paketItems
+        : [
+            {
+              id: `pkg-${Date.now()}-1`,
+              nama: initialInvoice.paketLayanan || "Paket Wisata",
+              deskripsi: initialInvoice.deskripsi || "",
+              tipeHitungan: initialInvoice.tipeHitungan || "satuan",
+              qty: initialInvoice.qty || 1,
+              hargaSatuan: initialInvoice.hargaSatuan || 0,
+              total: initialInvoice.total || (initialInvoice.qty || 1) * (initialInvoice.hargaSatuan || 0),
+            },
+          ];
+
     return {
       nomorInvoice: initialInvoice.nomorInvoice || "",
       tanggal: initialInvoice.tanggal || new Date().toISOString().split("T")[0],
@@ -56,6 +72,7 @@ function getInitialInvoiceData(
       qty: initialInvoice.qty || 1,
       hargaSatuan: initialInvoice.hargaSatuan || 0,
       total: initialInvoice.total || (initialInvoice.qty || 1) * (initialInvoice.hargaSatuan || 0),
+      paketItems: existingPaketItems,
       layananTambahan: initialInvoice.layananTambahan || [],
       totalUangMasuk: initialInvoice.totalUangMasuk || 0,
       labaBersih: initialInvoice.labaBersih || 0,
@@ -65,6 +82,19 @@ function getInitialInvoiceData(
     const today = new Date();
     const ym = today.toISOString().slice(0, 7).replace("-", "");
     const rand = Math.floor(100 + Math.random() * 900);
+    const bkgQty = selectedBooking.peserta && selectedBooking.peserta.length > 0 ? selectedBooking.peserta.length : 1;
+    const bkgPaketItems: TourPackageItem[] = [
+      {
+        id: `pkg-${Date.now()}-1`,
+        nama: selectedBooking.pilihanPaket || "Paket Body Rafting Green Canyon",
+        deskripsi: `Paket wisata ${profile?.name || "wisata"} include guide, tiket masuk, peralatan, dan asuransi.`,
+        tipeHitungan: "satuan",
+        qty: bkgQty,
+        hargaSatuan: 200000,
+        total: bkgQty * 200000,
+      },
+    ];
+
     return {
       nomorInvoice: `INV-${prefix}-${ym}-${rand}`,
       tanggal: new Date().toISOString().split("T")[0],
@@ -79,9 +109,10 @@ function getInitialInvoiceData(
       deskripsi: `Paket wisata ${profile?.name || "wisata"} include guide, tiket masuk, peralatan, dan asuransi.`,
       keterangan: `Booking #${selectedBooking.bookingCode} | Kendaraan: ${selectedBooking.nomorKendaraan || "-"}`,
       tipeHitungan: "satuan" as const,
-      qty: selectedBooking.peserta && selectedBooking.peserta.length > 0 ? selectedBooking.peserta.length : 1,
+      qty: bkgQty,
       hargaSatuan: 200000,
-      total: (selectedBooking.peserta && selectedBooking.peserta.length > 0 ? selectedBooking.peserta.length : 1) * 200000,
+      total: bkgQty * 200000,
+      paketItems: bkgPaketItems,
       layananTambahan: [],
       totalUangMasuk: 0,
       labaBersih: 250000,
@@ -90,6 +121,18 @@ function getInitialInvoiceData(
   const today = new Date();
   const ym = today.toISOString().slice(0, 7).replace("-", "");
   const rand = Math.floor(100 + Math.random() * 900);
+  const defaultPaketItems: TourPackageItem[] = [
+    {
+      id: `pkg-${Date.now()}-1`,
+      nama: "Paket Body Rafting Green Canyon",
+      deskripsi: "Paket lengkap peralatan safety, pemandu lokal bersertifikat, perahu antar jemput, dan asuransi.",
+      tipeHitungan: "satuan",
+      qty: 5,
+      hargaSatuan: 225000,
+      total: 1125000,
+    },
+  ];
+
   return {
     nomorInvoice: `INV-${prefix}-${ym}-${rand}`,
     tanggal: new Date().toISOString().split("T")[0],
@@ -107,6 +150,7 @@ function getInitialInvoiceData(
     qty: 5,
     hargaSatuan: 225000,
     total: 1125000,
+    paketItems: defaultPaketItems,
     layananTambahan: [],
     totalUangMasuk: 0,
     labaBersih: 300000,
@@ -138,17 +182,59 @@ export default function InvoiceModal({
   const [emailPemesan, setEmailPemesan] = useState(initial.emailPemesan);
   const [nomorTeleponPemesan, setNomorTeleponPemesan] = useState(initial.nomorTeleponPemesan);
 
-  // Main Tour Package
-  const [paketLayanan, setPaketLayanan] = useState(initial.paketLayanan);
+  // Main Tour Packages (Multi-Item Support)
+  const [paketItems, setPaketItems] = useState<TourPackageItem[]>(initial.paketItems);
   const [tanggalPelaksanaan, setTanggalPelaksanaan] = useState(initial.tanggalPelaksanaan);
   const [deskripsi, setDeskripsi] = useState(initial.deskripsi);
   const [keterangan, setKeterangan] = useState(initial.keterangan);
 
-  // Tipe Hitungan: 'satuan' (Qty x Harga) vs 'non-satuan' (Tanpa Satuan / -)
-  const [tipeHitungan, setTipeHitungan] = useState<"satuan" | "non-satuan">(initial.tipeHitungan || "satuan");
-  const [qty, setQty] = useState<number>(initial.qty);
-  const [hargaSatuan, setHargaSatuan] = useState<number>(initial.hargaSatuan);
-  const [fixedTotal, setFixedTotal] = useState<number>(initial.total || 0);
+  // Package Item Handlers
+  const handleAddPackageItem = () => {
+    setPaketItems((prev) => [
+      ...prev,
+      {
+        id: `pkg-${Date.now()}-${prev.length + 1}`,
+        nama: "",
+        deskripsi: "",
+        tipeHitungan: "satuan",
+        qty: 1,
+        hargaSatuan: 0,
+        total: 0,
+      },
+    ]);
+  };
+
+  const handleRemovePackageItem = (id: string) => {
+    if (paketItems.length <= 1) return;
+    setPaketItems((prev) => prev.filter((p) => p.id !== id));
+  };
+
+  const handleUpdatePackageItem = (
+    id: string,
+    field: "nama" | "deskripsi" | "tipeHitungan" | "qty" | "hargaSatuan" | "total",
+    value: string | number
+  ) => {
+    setPaketItems((prev) =>
+      prev.map((item) => {
+        if (item.id !== id) return item;
+        const updated = { ...item, [field]: value };
+        if (field === "tipeHitungan") {
+          if (value === "non-satuan") {
+            updated.qty = 0;
+            updated.hargaSatuan = 0;
+          } else {
+            updated.qty = updated.qty || 1;
+          }
+        }
+        if (field === "qty" || field === "hargaSatuan" || field === "tipeHitungan") {
+          if (updated.tipeHitungan === "satuan") {
+            updated.total = (Number(updated.qty) || 0) * (Number(updated.hargaSatuan) || 0);
+          }
+        }
+        return updated;
+      })
+    );
+  };
 
   // Additional Services (Add-ons)
   const [layananTambahan, setLayananTambahan] = useState<AdditionalService[]>(initial.layananTambahan);
@@ -167,17 +253,24 @@ export default function InvoiceModal({
     setNomorTeleponPemesan(b.nomorHp);
     setAlamatPemesan(b.alamat || "");
     setEmailPemesan(b.email || "");
-    setPaketLayanan(b.pilihanPaket);
     setTanggalPelaksanaan(b.tanggalTrip);
-    setQty(b.peserta && b.peserta.length > 0 ? b.peserta.length : 1);
-    setHargaSatuan(200000);
-    setFixedTotal((b.peserta && b.peserta.length > 0 ? b.peserta.length : 1) * 200000);
+    const bkgQty = b.peserta && b.peserta.length > 0 ? b.peserta.length : 1;
+    setPaketItems([
+      {
+        id: `pkg-${Date.now()}-1`,
+        nama: b.pilihanPaket,
+        deskripsi: `Paket wisata ${profile.name} include guide, tiket masuk, peralatan, dan asuransi.`,
+        tipeHitungan: "satuan",
+        qty: bkgQty,
+        hargaSatuan: 200000,
+        total: bkgQty * 200000,
+      },
+    ]);
     setTanggal(new Date().toISOString().split("T")[0]);
     setKeterangan(`Booking #${b.bookingCode} | Kendaraan: ${b.nomorKendaraan || "-"}`);
     setDeskripsi(`Paket wisata ${profile.name} include guide, tiket masuk, peralatan, dan asuransi.`);
     setTotalUangMasuk(0);
     setLabaBersih(250000);
-    setTipeHitungan("satuan");
   };
 
   const handleApplySmartPaste = (parsed: ParsedBookingData) => {
@@ -185,14 +278,21 @@ export default function InvoiceModal({
     if (parsed.nomorHp) setNomorTeleponPemesan(parsed.nomorHp);
     if (parsed.alamat) setAlamatPemesan(parsed.alamat);
     if (parsed.email) setEmailPemesan(parsed.email);
-    if (parsed.pilihanPaket) setPaketLayanan(parsed.pilihanPaket);
     if (parsed.tanggalTrip) setTanggalPelaksanaan(parsed.tanggalTrip);
 
-    if (parsed.qty && parsed.qty > 0) {
-      setQty(parsed.qty);
-      if (tipeHitungan === "satuan" && hargaSatuan > 0) {
-        setFixedTotal(parsed.qty * hargaSatuan);
-      }
+    if (parsed.pilihanPaket) {
+      const pQty = parsed.qty && parsed.qty > 0 ? parsed.qty : 1;
+      setPaketItems([
+        {
+          id: `pkg-${Date.now()}-1`,
+          nama: parsed.pilihanPaket,
+          deskripsi: `Paket wisata ${profile.name} include guide, tiket masuk, peralatan, dan asuransi.`,
+          tipeHitungan: "satuan",
+          qty: pQty,
+          hargaSatuan: 200000,
+          total: pQty * 200000,
+        },
+      ]);
     }
 
     const ketParts: string[] = [];
@@ -277,9 +377,10 @@ export default function InvoiceModal({
   };
 
   // Calculations
-  const mainPackageTotal = tipeHitungan === "satuan"
-    ? (Number(qty) || 0) * (Number(hargaSatuan) || 0)
-    : (Number(fixedTotal) || 0);
+  const mainPackageTotal = paketItems.reduce(
+    (sum, item) => sum + (Number(item.total) || 0),
+    0
+  );
 
   const additionalTotal = layananTambahan.reduce((sum, item) => sum + (Number(item.total) || 0), 0);
   const grandTotal = mainPackageTotal + additionalTotal;
@@ -324,10 +425,21 @@ export default function InvoiceModal({
       setErrorMsg("Nama Pemesan wajib diisi!");
       return;
     }
-    if (!paketLayanan.trim()) {
-      setErrorMsg("Nama Paket Layanan wajib diisi!");
+    if (paketItems.length === 0 || !paketItems[0].nama.trim()) {
+      setErrorMsg("Setidaknya satu nama paket aktivitas wajib diisi!");
       return;
     }
+
+    const primaryPkg = paketItems[0];
+    const combinedPackageNames = paketItems
+      .map((p) => p.nama.trim())
+      .filter(Boolean)
+      .join(" + ") || primaryPkg.nama;
+
+    const totalQty = paketItems.reduce(
+      (sum, p) => sum + (p.tipeHitungan === "satuan" ? Number(p.qty) || 0 : 0),
+      0
+    );
 
     const newInvoice: Invoice = {
       id: initialInvoice ? initialInvoice.id : `inv-${Date.now()}`,
@@ -339,14 +451,15 @@ export default function InvoiceModal({
       alamatPemesan: alamatPemesan.trim(),
       emailPemesan: emailPemesan.trim(),
       nomorTeleponPemesan: nomorTeleponPemesan.trim(),
-      paketLayanan: paketLayanan.trim(),
+      paketLayanan: combinedPackageNames,
       tanggalPelaksanaan: tanggalPelaksanaan || tanggal,
-      deskripsi: deskripsi.trim(),
+      deskripsi: primaryPkg.deskripsi || deskripsi.trim(),
       keterangan: keterangan.trim(),
-      tipeHitungan,
-      qty: tipeHitungan === "satuan" ? (Number(qty) || 1) : 0,
-      hargaSatuan: tipeHitungan === "satuan" ? (Number(hargaSatuan) || 0) : 0,
+      tipeHitungan: paketItems.some((p) => p.tipeHitungan === "satuan") ? "satuan" : "non-satuan",
+      qty: totalQty || primaryPkg.qty,
+      hargaSatuan: paketItems.length === 1 ? primaryPkg.hargaSatuan : 0,
       total: mainPackageTotal,
+      paketItems,
       layananTambahan,
       grandTotal,
       totalUangMasuk: Number(totalUangMasuk) || 0,
@@ -572,59 +685,213 @@ export default function InvoiceModal({
             </div>
           </div>
 
-          {/* Section 3: Detail Layanan & Perhitungan Harga */}
+          {/* Section 3: Paket Aktivitas Wisata (Multi-Paket) */}
           <div className="space-y-3 p-4 bg-slate-50/80 rounded-xl border border-slate-200">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-2.5">
-              <h3 className="font-bold text-slate-800 text-xs uppercase tracking-wider flex items-center gap-1.5">
-                <Calculator className="w-4 h-4 text-teal-600" />
-                <span>Layanan Utama & Model Perhitungan</span>
-              </h3>
+              <div>
+                <h3 className="font-bold text-slate-800 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                  <Calculator className="w-4 h-4 text-teal-600" />
+                  <span>Daftar Paket Aktivitas Wisata</span>
+                  <span className="px-1.5 py-0.5 rounded text-[10px] bg-teal-100 text-teal-800 font-bold">
+                    {paketItems.length} Aktivitas
+                  </span>
+                </h3>
+                <p className="text-[11px] text-slate-500 mt-0.5">
+                  Bisa menambahkan lebih dari 1 paket aktivitas dalam satu invoice (misal: Body Rafting + Jetski).
+                </p>
+              </div>
 
-              {/* Toggle: Hitung per Satuan vs Tanpa Satuan (-) */}
-              <div className="flex items-center gap-1.5 bg-white p-1 rounded-lg border border-slate-300 text-xs">
-                <button
-                  type="button"
-                  onClick={() => setTipeHitungan("satuan")}
-                  className={`px-2.5 py-1 rounded-md font-medium transition-all ${tipeHitungan === "satuan"
-                    ? "bg-teal-600 text-white font-semibold shadow-2xs"
-                    : "text-slate-600 hover:bg-slate-100"
-                    }`}
+              <button
+                type="button"
+                onClick={handleAddPackageItem}
+                className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-xs font-semibold shadow-xs transition-all active:scale-95 cursor-pointer self-start sm:self-auto"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>+ Tambah Paket</span>
+              </button>
+            </div>
+
+            {/* List of Tour Packages */}
+            <div className="space-y-3">
+              {paketItems.map((pkg, idx) => (
+                <div
+                  key={pkg.id}
+                  className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs space-y-3 relative transition-all"
                 >
-                  Hitung per Pax / Satuan
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setTipeHitungan("non-satuan");
-                    if (fixedTotal === 0 && qty * hargaSatuan > 0) {
-                      setFixedTotal(qty * hargaSatuan);
-                    }
-                  }}
-                  className={`px-2.5 py-1 rounded-md font-medium transition-all ${tipeHitungan === "non-satuan"
-                    ? "bg-teal-600 text-white font-semibold shadow-2xs"
-                    : "text-slate-600 hover:bg-slate-100"
-                    }`}
-                >
-                  Tanpa Satuan / Borongan (-)
-                </button>
+                  <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="w-5 h-5 rounded-full bg-teal-50 text-teal-700 font-bold text-[11px] flex items-center justify-center border border-teal-200">
+                        {idx + 1}
+                      </span>
+                      <span className="font-bold text-xs text-slate-800">
+                        Aktivitas #{idx + 1}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      {/* Toggle Satuan / Non-Satuan */}
+                      <div className="flex items-center bg-slate-100 p-0.5 rounded-lg text-[10px]">
+                        <button
+                          type="button"
+                          onClick={() => handleUpdatePackageItem(pkg.id, "tipeHitungan", "satuan")}
+                          className={`px-2 py-0.5 rounded font-medium transition-all ${
+                            pkg.tipeHitungan === "satuan"
+                              ? "bg-white text-teal-700 font-bold shadow-2xs"
+                              : "text-slate-500 hover:text-slate-800"
+                          }`}
+                        >
+                          per Pax
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleUpdatePackageItem(pkg.id, "tipeHitungan", "non-satuan")}
+                          className={`px-2 py-0.5 rounded font-medium transition-all ${
+                            pkg.tipeHitungan === "non-satuan"
+                              ? "bg-white text-teal-700 font-bold shadow-2xs"
+                              : "text-slate-500 hover:text-slate-800"
+                          }`}
+                        >
+                          Borongan (-)
+                        </button>
+                      </div>
+
+                      {paketItems.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => handleRemovePackageItem(pkg.id)}
+                          title="Hapus aktivitas ini"
+                          className="p-1 rounded-lg text-rose-500 hover:bg-rose-50 transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
+                    {/* Nama Paket */}
+                    <div className="sm:col-span-6">
+                      <label className="block text-slate-600 mb-1 text-xs">
+                        Nama Paket Aktivitas <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={pkg.nama}
+                        onChange={(e) => handleUpdatePackageItem(pkg.id, "nama", e.target.value)}
+                        placeholder="Contoh: Paket Body Rafting Green Canyon / Sewa Jetski"
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:bg-white focus:outline-teal-600 text-xs font-semibold"
+                      />
+                    </div>
+
+                    {pkg.tipeHitungan === "satuan" ? (
+                      <>
+                        {/* Qty */}
+                        <div className="sm:col-span-2">
+                          <label className="block text-slate-600 mb-1 text-xs">
+                            Qty (Pax)
+                          </label>
+                          <input
+                            type="number"
+                            min="1"
+                            required
+                            value={pkg.qty === 0 ? "" : pkg.qty}
+                            placeholder="1"
+                            onChange={(e) =>
+                              handleUpdatePackageItem(
+                                pkg.id,
+                                "qty",
+                                e.target.value === "" ? 0 : Math.max(0, parseInt(e.target.value) || 0)
+                              )
+                            }
+                            className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:bg-white focus:outline-teal-600 text-xs font-bold text-center"
+                          />
+                        </div>
+
+                        {/* Harga Satuan */}
+                        <div className="sm:col-span-2">
+                          <label className="block text-slate-600 mb-1 text-xs">
+                            Harga Satuan (Rp)
+                          </label>
+                          <input
+                            type="number"
+                            min="0"
+                            step="any"
+                            placeholder="0"
+                            value={pkg.hargaSatuan === 0 ? "" : pkg.hargaSatuan}
+                            onChange={(e) =>
+                              handleUpdatePackageItem(
+                                pkg.id,
+                                "hargaSatuan",
+                                e.target.value === "" ? 0 : Math.max(0, parseInt(e.target.value) || 0)
+                              )
+                            }
+                            className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:bg-white focus:outline-teal-600 text-xs font-bold"
+                          />
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        {/* Non-satuan / Borongan Total */}
+                        <div className="sm:col-span-4">
+                          <label className="block text-teal-900 font-bold mb-1 text-xs">
+                            Total Harga Borongan (Rp) <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="number"
+                            min="0"
+                            step="any"
+                            required
+                            value={pkg.total === 0 ? "" : pkg.total}
+                            onChange={(e) =>
+                              handleUpdatePackageItem(
+                                pkg.id,
+                                "total",
+                                e.target.value === "" ? 0 : Math.max(0, parseInt(e.target.value) || 0)
+                              )
+                            }
+                            placeholder="0"
+                            className="w-full px-3 py-2 bg-white border border-teal-300 rounded-lg focus:outline-teal-600 text-xs font-mono font-bold text-slate-900"
+                          />
+                        </div>
+                      </>
+                    )}
+
+                    {/* Subtotal Item */}
+                    <div className="sm:col-span-2">
+                      <label className="block text-slate-600 mb-1 text-xs">
+                        Subtotal
+                      </label>
+                      <div className="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-lg font-mono font-bold text-slate-900 text-xs flex items-center justify-end">
+                        {formatRupiah(pkg.total)}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Total Section 3 */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-slate-200">
+              <button
+                type="button"
+                onClick={handleAddPackageItem}
+                className="inline-flex items-center gap-1.5 text-xs text-teal-700 hover:text-teal-800 font-bold cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                <span>+ Tambah Paket Aktivitas Lain</span>
+              </button>
+
+              <div className="text-right text-xs">
+                <span className="text-slate-500 mr-2">Total Seluruh Paket Aktivitas:</span>
+                <span className="font-mono font-black text-slate-900 text-sm">
+                  {formatRupiah(mainPackageTotal)}
+                </span>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
-              <div className="sm:col-span-2">
-                <label className="block text-slate-600 mb-1 text-xs">
-                  Nama Paket Layanan <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={paketLayanan}
-                  onChange={(e) => setPaketLayanan(e.target.value)}
-                  placeholder="Contoh: Paket Body Rafting Green Canyon / Sewa Bus Pariwisata"
-                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg focus:outline-teal-600 text-xs font-semibold"
-                />
-              </div>
-
+            {/* Tanggal Pelaksanaan & Keterangan */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-slate-200">
               <div>
                 <label className="block text-slate-600 mb-1 text-xs">
                   Tanggal Pelaksanaan Trip
@@ -636,128 +903,16 @@ export default function InvoiceModal({
                   className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg focus:outline-teal-600 text-xs"
                 />
               </div>
-            </div>
 
-            {/* Input Perhitungan: Satuan vs Non-Satuan */}
-            {tipeHitungan === "satuan" ? (
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-white p-3.5 rounded-xl border border-slate-200">
-                <div>
-                  <label className="block text-slate-700 font-semibold mb-1 text-xs">
-                    Jumlah Peserta (Pax / Qty)
-                  </label>
-                  <div className="flex items-center gap-1">
-                    <button
-                      type="button"
-                      onClick={() => setQty(Math.max(1, qty - 1))}
-                      className="px-2.5 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg font-bold text-xs"
-                    >
-                      -
-                    </button>
-                    <input
-                      type="number"
-                      min="1"
-                      required
-                      value={qty === 0 ? "" : qty}
-                      placeholder="1"
-                      onChange={(e) => setQty(e.target.value === "" ? 0 : Math.max(0, parseInt(e.target.value) || 0))}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:bg-white focus:outline-teal-600 text-xs font-bold text-center"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setQty(qty + 1)}
-                      className="px-2.5 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg font-bold text-xs"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-slate-700 font-semibold mb-1 text-xs">
-                    Harga Satuan per Pax (Rp)
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="any"
-                    placeholder="0"
-                    value={hargaSatuan === 0 ? "" : hargaSatuan}
-                    onChange={(e) => setHargaSatuan(e.target.value === "" ? 0 : Math.max(0, parseInt(e.target.value) || 0))}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:bg-white focus:outline-teal-600 text-xs font-bold"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-slate-700 font-semibold mb-1 text-xs">
-                    Subtotal Paket
-                  </label>
-                  <div className="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-lg font-mono font-bold text-slate-900 text-xs flex items-center justify-between">
-                    <span>{formatRupiah(mainPackageTotal)}</span>
-                    <span className="text-[10px] text-teal-700 font-normal">({qty} Pax)</span>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-teal-50/60 p-3.5 rounded-xl border border-teal-200">
-                <div>
-                  <label className="block text-slate-600 mb-1 text-xs">
-                    Satuan / Qty (Pax)
-                  </label>
-                  <div className="w-full px-3 py-2 bg-white/70 border border-slate-300 rounded-lg text-slate-400 font-bold text-xs text-center">
-                    - (Tanpa Satuan)
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-slate-600 mb-1 text-xs">
-                    Harga Satuan
-                  </label>
-                  <div className="w-full px-3 py-2 bg-white/70 border border-slate-300 rounded-lg text-slate-400 font-bold text-xs text-center">
-                    -
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-teal-900 font-bold mb-1 text-xs">
-                    Total Harga Paket / Borongan (Rp) <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="any"
-                    required
-                    value={fixedTotal === 0 ? "" : fixedTotal}
-                    onChange={(e) => setFixedTotal(e.target.value === "" ? 0 : Math.max(0, parseInt(e.target.value) || 0))}
-                    placeholder="0"
-                    className="w-full px-3 py-2 bg-white border border-teal-300 rounded-lg focus:outline-teal-600 text-xs font-mono font-bold text-slate-900"
-                  />
-                </div>
-              </div>
-            )}
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-              <div>
+              <div className="sm:col-span-2">
                 <label className="block text-slate-600 mb-1 text-xs">
-                  Deskripsi Layanan / Fasilitas
-                </label>
-                <textarea
-                  rows={2}
-                  value={deskripsi}
-                  onChange={(e) => setDeskripsi(e.target.value)}
-                  placeholder="Fasilitas yang didapatkan wisatawan..."
-                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg focus:outline-teal-600 text-xs"
-                />
-              </div>
-
-              <div>
-                <label className="block text-slate-600 mb-1 text-xs">
-                  Keterangan Tambahan
+                  Keterangan Tambahan / Catatan Rombongan
                 </label>
                 <textarea
                   rows={2}
                   value={keterangan}
                   onChange={(e) => setKeterangan(e.target.value)}
-                  placeholder="Catatan penjemputan, meeting point, atau instruksi rombongan..."
+                  placeholder="Kendaraan, jam kedatangan, meeting point, instruksi rombongan..."
                   className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg focus:outline-teal-600 text-xs"
                 />
               </div>

@@ -27,18 +27,32 @@ export function formatDateIndo(dateStr: string): string {
 
 export function generateWhatsAppMessage(inv: Invoice): string {
   const profile = getAccountProfile(inv.userEmail);
+  const hasMultiplePackages = Boolean(inv.paketItems && inv.paketItems.length > 0);
+
+  const packageLines = hasMultiplePackages
+    ? inv.paketItems!.map(p => `- ${p.nama} ${p.tipeHitungan === "non-satuan" ? "(-)" : `(${p.qty} Pax)`}: ${formatRupiah(p.total)}`).join("\n")
+    : `- ${inv.paketLayanan} ${inv.tipeHitungan === "non-satuan" ? "(-)" : `(${inv.qty} Pax)`}: ${formatRupiah(inv.total)}`;
+
+  const packageNames = hasMultiplePackages
+    ? inv.paketItems!.map(p => p.nama).join(" + ")
+    : inv.paketLayanan;
+
+  const totalPaxStr = hasMultiplePackages
+    ? inv.paketItems!.map(p => `${p.qty} Pax ${p.nama}`).join(", ")
+    : (inv.tipeHitungan === "non-satuan" ? "-" : `${inv.qty} Pax`);
+
   return `*INVOICE PEMESANAN TRIP - ${profile.name.toUpperCase()}*
 ----------------------------------------
 *No. Invoice:* ${inv.nomorInvoice}
 *Nama Pemesan:* ${inv.namaPemesan}
-*Paket Layanan:* ${inv.paketLayanan}
+*Paket Layanan:* ${packageNames}
 *Tanggal Pelaksanaan:* ${formatDateIndo(inv.tanggalPelaksanaan)}
-*Jumlah Peserta:* ${inv.tipeHitungan === "non-satuan" ? "-" : `${inv.qty} Pax`}
+*Jumlah Peserta:* ${totalPaxStr}
 *Status Pembayaran:* ${inv.status}
 
 *RINCIAN BIAYA:*
-- Paket Utama ${inv.tipeHitungan === "non-satuan" ? "(-)" : `(${inv.qty} Pax)`}: ${formatRupiah(inv.total)}
-${inv.layananTambahan && inv.layananTambahan.length > 0 ? inv.layananTambahan.map(item => `- ${item.nama} ${item.pakaiSatuan === false ? "(-)" : `(${item.qty}x)`}: ${formatRupiah(item.total)}`).join("\n") + "\n" : ""}----------------------------------------
+${packageLines}
+${inv.layananTambahan && inv.layananTambahan.length > 0 ? inv.layananTambahan.map(item => `- [Tambahan] ${item.nama} ${item.pakaiSatuan === false ? "(-)" : `(${item.qty}x)`}: ${formatRupiah(item.total)}`).join("\n") + "\n" : ""}----------------------------------------
 *GRAND TOTAL:* ${formatRupiah(inv.grandTotal)}
 *Total Uang Masuk (DP/Bayar):* ${formatRupiah(inv.totalUangMasuk)}
 *SISA TAGIHAN:* ${formatRupiah(inv.sisaTagihan)}

@@ -32,6 +32,16 @@ export interface AdditionalService {
   total: number;
 }
 
+export interface TourPackageItem {
+  id: string;
+  nama: string;
+  deskripsi?: string;
+  tipeHitungan?: "satuan" | "non-satuan";
+  qty: number;
+  hargaSatuan: number;
+  total: number;
+}
+
 export type PaymentStatus = "Belum Bayar" | "DP (Down Payment)" | "Lunas" | "Dibatalkan";
 
 export interface Invoice {
@@ -47,7 +57,7 @@ export interface Invoice {
   emailPemesan: string;
   nomorTeleponPemesan: string;
 
-  // Detail Layanan Utama
+  // Detail Layanan Utama (Legacy support & summary)
   paketLayanan: string;
   tanggalPelaksanaan: string; // Tanggal trip
   deskripsi: string;
@@ -56,6 +66,9 @@ export interface Invoice {
   qty: number; // Jumlah Pax
   hargaSatuan: number;
   total: number; // qty * hargaSatuan atau fixed total
+
+  // Multi-Paket Aktivitas Wisata Utama
+  paketItems?: TourPackageItem[];
 
   // Layanan Tambahan (Add-ons)
   layananTambahan: AdditionalService[];
