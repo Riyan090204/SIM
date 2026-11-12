@@ -5,6 +5,8 @@ import { Invoice, Booking, AdditionalService, PaymentStatus } from "@/types";
 import { formatRupiah } from "@/lib/format";
 import { useAuth } from "@/context/AuthContext";
 import { getAccountProfile, AccountProfile } from "@/lib/accountConfig";
+import SmartPasteBox from "./SmartPasteBox";
+import { ParsedBookingData } from "@/lib/textParser";
 import {
   X,
   Plus,
@@ -176,6 +178,43 @@ export default function InvoiceModal({
     setTotalUangMasuk(0);
     setLabaBersih(250000);
     setTipeHitungan("satuan");
+  };
+
+  const handleApplySmartPaste = (parsed: ParsedBookingData) => {
+    if (parsed.namaPemesan) setNamaPemesan(parsed.namaPemesan);
+    if (parsed.nomorHp) setNomorTeleponPemesan(parsed.nomorHp);
+    if (parsed.alamat) setAlamatPemesan(parsed.alamat);
+    if (parsed.email) setEmailPemesan(parsed.email);
+    if (parsed.pilihanPaket) setPaketLayanan(parsed.pilihanPaket);
+    if (parsed.tanggalTrip) setTanggalPelaksanaan(parsed.tanggalTrip);
+
+    if (parsed.qty && parsed.qty > 0) {
+      setQty(parsed.qty);
+      if (tipeHitungan === "satuan" && hargaSatuan > 0) {
+        setFixedTotal(parsed.qty * hargaSatuan);
+      }
+    }
+
+    const ketParts: string[] = [];
+    if (parsed.nomorKendaraan) ketParts.push(`Kendaraan: ${parsed.nomorKendaraan}`);
+    if (parsed.instagram) ketParts.push(`IG: @${parsed.instagram}`);
+    if (parsed.estimasiWaktuKedatangan) ketParts.push(`Waktu: ${parsed.estimasiWaktuKedatangan}`);
+    if (parsed.peserta && parsed.peserta.length > 0) {
+      const pesertaNames = parsed.peserta
+        .map((p) => `${p.nama} (${p.gender === "Perempuan" ? "P" : "L"})`)
+        .join(", ");
+      ketParts.push(`Peserta: ${pesertaNames}`);
+    }
+    if (ketParts.length > 0) {
+      setKeterangan(ketParts.join(" | "));
+    }
+
+    if (parsed.dpNominal && parsed.dpNominal > 0) {
+      setTotalUangMasuk(parsed.dpNominal);
+      setStatus("DP (Down Payment)");
+    }
+
+    setDeskripsi(`Paket wisata ${profile.name} include guide, tiket masuk, peralatan, dan asuransi.`);
   };
 
   const handleBookingSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -378,8 +417,12 @@ export default function InvoiceModal({
           onKeyDown={handleFormKeyDown}
           className="p-4 sm:p-6 space-y-4 sm:space-y-6 max-h-[85vh] overflow-y-auto text-xs sm:text-sm"
         >
-
-
+          {/* Smart Paste WhatsApp Box */}
+          <SmartPasteBox
+            onApply={handleApplySmartPaste}
+            title="Smart Paste dari Chat WhatsApp"
+            description="Salin pesan format booking dari WhatsApp, tempel di sini untuk otomatis mengisi data pemesan, paket, tanggal, dan detail invoice."
+          />
 
           {/* Option: Import from Booking */}
           {!initialInvoice && bookings.length > 0 && (
@@ -543,8 +586,8 @@ export default function InvoiceModal({
                   type="button"
                   onClick={() => setTipeHitungan("satuan")}
                   className={`px-2.5 py-1 rounded-md font-medium transition-all ${tipeHitungan === "satuan"
-                      ? "bg-teal-600 text-white font-semibold shadow-2xs"
-                      : "text-slate-600 hover:bg-slate-100"
+                    ? "bg-teal-600 text-white font-semibold shadow-2xs"
+                    : "text-slate-600 hover:bg-slate-100"
                     }`}
                 >
                   Hitung per Pax / Satuan
@@ -558,8 +601,8 @@ export default function InvoiceModal({
                     }
                   }}
                   className={`px-2.5 py-1 rounded-md font-medium transition-all ${tipeHitungan === "non-satuan"
-                      ? "bg-teal-600 text-white font-semibold shadow-2xs"
-                      : "text-slate-600 hover:bg-slate-100"
+                    ? "bg-teal-600 text-white font-semibold shadow-2xs"
+                    : "text-slate-600 hover:bg-slate-100"
                     }`}
                 >
                   Tanpa Satuan / Borongan (-)
@@ -886,8 +929,8 @@ export default function InvoiceModal({
                   type="button"
                   onClick={() => handleQuickSetPayment(0, "Belum Bayar")}
                   className={`text-xs px-2.5 py-1.5 rounded-lg border font-medium transition-all ${totalUangMasuk === 0
-                      ? "bg-amber-500/30 text-amber-300 border-amber-400/50 font-bold ring-1 ring-amber-400/30"
-                      : "bg-white/10 text-slate-300 border-white/10 hover:bg-white/20"
+                    ? "bg-amber-500/30 text-amber-300 border-amber-400/50 font-bold ring-1 ring-amber-400/30"
+                    : "bg-white/10 text-slate-300 border-white/10 hover:bg-white/20"
                     }`}
                 >
                   Belum Bayar (Rp 0)
@@ -898,8 +941,8 @@ export default function InvoiceModal({
                   type="button"
                   onClick={() => handleQuickSetPayment(Math.round(grandTotal * 0.2), "DP (Down Payment)")}
                   className={`text-xs px-2.5 py-1.5 rounded-lg border font-medium transition-all ${totalUangMasuk === Math.round(grandTotal * 0.2) && grandTotal > 0
-                      ? "bg-sky-500/40 text-sky-300 border-sky-400/60 font-bold ring-1 ring-sky-400/40"
-                      : "bg-white/10 text-slate-300 border-white/10 hover:bg-white/20"
+                    ? "bg-sky-500/40 text-sky-300 border-sky-400/60 font-bold ring-1 ring-sky-400/40"
+                    : "bg-white/10 text-slate-300 border-white/10 hover:bg-white/20"
                     }`}
                 >
                   DP 20% ({formatRupiah(Math.round(grandTotal * 0.2))})
@@ -910,8 +953,8 @@ export default function InvoiceModal({
                   type="button"
                   onClick={() => handleQuickSetPayment(Math.round(grandTotal * 0.3), "DP (Down Payment)")}
                   className={`text-xs px-2.5 py-1.5 rounded-lg border font-medium transition-all ${totalUangMasuk === Math.round(grandTotal * 0.3) && grandTotal > 0
-                      ? "bg-sky-500/40 text-sky-300 border-sky-400/60 font-bold ring-1 ring-sky-400/40"
-                      : "bg-white/10 text-slate-300 border-white/10 hover:bg-white/20"
+                    ? "bg-sky-500/40 text-sky-300 border-sky-400/60 font-bold ring-1 ring-sky-400/40"
+                    : "bg-white/10 text-slate-300 border-white/10 hover:bg-white/20"
                     }`}
                 >
                   DP 30% ({formatRupiah(Math.round(grandTotal * 0.3))})
@@ -922,8 +965,8 @@ export default function InvoiceModal({
                   type="button"
                   onClick={() => handleQuickSetPayment(Math.round(grandTotal * 0.5), "DP (Down Payment)")}
                   className={`text-xs px-2.5 py-1.5 rounded-lg border font-medium transition-all ${totalUangMasuk === Math.round(grandTotal * 0.5) && grandTotal > 0
-                      ? "bg-sky-500/40 text-sky-300 border-sky-400/60 font-bold ring-1 ring-sky-400/40"
-                      : "bg-white/10 text-slate-300 border-white/10 hover:bg-white/20"
+                    ? "bg-sky-500/40 text-sky-300 border-sky-400/60 font-bold ring-1 ring-sky-400/40"
+                    : "bg-white/10 text-slate-300 border-white/10 hover:bg-white/20"
                     }`}
                 >
                   DP 50% ({formatRupiah(Math.round(grandTotal * 0.5))})
@@ -934,8 +977,8 @@ export default function InvoiceModal({
                   type="button"
                   onClick={() => handleQuickSetPayment(grandTotal, "Lunas")}
                   className={`text-xs px-3 py-1.5 rounded-lg border font-bold transition-all ${totalUangMasuk === grandTotal && grandTotal > 0
-                      ? "bg-emerald-500/40 text-emerald-200 border-emerald-400/70 ring-2 ring-emerald-500/50"
-                      : "bg-emerald-600/30 text-emerald-300 border-emerald-500/30 hover:bg-emerald-600/50"
+                    ? "bg-emerald-500/40 text-emerald-200 border-emerald-400/70 ring-2 ring-emerald-500/50"
+                    : "bg-emerald-600/30 text-emerald-300 border-emerald-500/30 hover:bg-emerald-600/50"
                     }`}
                 >
                   ✓ Lunas 100% ({formatRupiah(grandTotal)})

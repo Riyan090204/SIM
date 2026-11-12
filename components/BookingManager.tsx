@@ -4,6 +4,8 @@ import React, { useState } from "react";
 import { Booking, Participant } from "@/types";
 import { formatDateIndo } from "@/lib/format";
 import { useAuth } from "@/context/AuthContext";
+import SmartPasteBox from "./SmartPasteBox";
+import { ParsedBookingData } from "@/lib/textParser";
 import { 
   Users, 
   Plus, 
@@ -110,6 +112,19 @@ export default function BookingManager({
   const handleRemoveParticipant = (id: string) => {
     if (peserta.length <= 1) return;
     setPeserta(peserta.filter((p) => p.id !== id));
+  };
+
+  const handleApplySmartPaste = (parsed: ParsedBookingData) => {
+    if (parsed.namaPemesan) setNamaPemesan(parsed.namaPemesan);
+    if (parsed.nomorHp) setNomorHp(parsed.nomorHp);
+    if (parsed.alamat) setAlamat(parsed.alamat);
+    if (parsed.instagram) setInstagram(parsed.instagram);
+    if (parsed.email) setEmail(parsed.email);
+    if (parsed.nomorKendaraan) setNomorKendaraan(parsed.nomorKendaraan);
+    if (parsed.pilihanPaket) setPilihanPaket(parsed.pilihanPaket);
+    if (parsed.tanggalTrip) setTanggalTrip(parsed.tanggalTrip);
+    if (parsed.estimasiWaktuKedatangan) setEstimasiWaktuKedatangan(parsed.estimasiWaktuKedatangan);
+    if (parsed.peserta && parsed.peserta.length > 0) setPeserta(parsed.peserta);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -388,7 +403,12 @@ export default function BookingManager({
               onKeyDown={handleFormKeyDown}
               className="p-4 sm:p-6 space-y-4 max-h-[85vh] overflow-y-auto text-xs sm:text-sm"
             >
-
+              {/* Smart Paste WhatsApp Box */}
+              <SmartPasteBox
+                onApply={handleApplySmartPaste}
+                title="Smart Paste dari Chat WhatsApp"
+                description="Salin pesan format booking dari WhatsApp, tempel di sini untuk otomatis mengisi form booking tamu."
+              />
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
