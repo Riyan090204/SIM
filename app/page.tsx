@@ -99,6 +99,13 @@ export default function Home() {
         (data) => {
           if (data && data.length > 0) {
             setBookings(data);
+            try {
+              const uKey = user?.email ? `_${user.email.replace(/[^a-zA-Z0-9]/g, "_")}` : "";
+              localStorage.setItem(`pangandaranhub_bookings${uKey}`, JSON.stringify(data));
+              localStorage.setItem("pangandaranhub_bookings", JSON.stringify(data));
+            } catch (e) {
+              console.error("Gagal update localStorage dari Firestore:", e);
+            }
           }
           setIsLoaded(true);
           setFirestoreError(null);
@@ -115,6 +122,13 @@ export default function Home() {
         (data) => {
           if (data && data.length > 0) {
             setInvoices(data);
+            try {
+              const uKey = user?.email ? `_${user.email.replace(/[^a-zA-Z0-9]/g, "_")}` : "";
+              localStorage.setItem(`pangandaranhub_invoices${uKey}`, JSON.stringify(data));
+              localStorage.setItem("pangandaranhub_invoices", JSON.stringify(data));
+            } catch (e) {
+              console.error("Gagal update localStorage dari Firestore:", e);
+            }
           }
           setIsLoaded(true);
           setFirestoreError(null);
@@ -136,24 +150,28 @@ export default function Home() {
     };
   }, [user]);
 
-  // Sync to localStorage as backup
+  // Sync to localStorage as backup (Hanya simpan jika ada isinya, mencegah tertimpa array kosong)
   useEffect(() => {
-    if (!isLoaded) return;
+    if (!isLoaded || !user) return;
     try {
       const uKey = user?.email ? `_${user.email.replace(/[^a-zA-Z0-9]/g, "_")}` : "";
-      localStorage.setItem(`pangandaranhub_invoices${uKey}`, JSON.stringify(invoices));
-      localStorage.setItem("pangandaranhub_invoices", JSON.stringify(invoices));
+      if (invoices.length > 0) {
+        localStorage.setItem(`pangandaranhub_invoices${uKey}`, JSON.stringify(invoices));
+        localStorage.setItem("pangandaranhub_invoices", JSON.stringify(invoices));
+      }
     } catch (e) {
       console.error("Gagal menyimpan invoices ke localStorage:", e);
     }
   }, [invoices, isLoaded, user]);
 
   useEffect(() => {
-    if (!isLoaded) return;
+    if (!isLoaded || !user) return;
     try {
       const uKey = user?.email ? `_${user.email.replace(/[^a-zA-Z0-9]/g, "_")}` : "";
-      localStorage.setItem(`pangandaranhub_bookings${uKey}`, JSON.stringify(bookings));
-      localStorage.setItem("pangandaranhub_bookings", JSON.stringify(bookings));
+      if (bookings.length > 0) {
+        localStorage.setItem(`pangandaranhub_bookings${uKey}`, JSON.stringify(bookings));
+        localStorage.setItem("pangandaranhub_bookings", JSON.stringify(bookings));
+      }
     } catch (e) {
       console.error("Gagal menyimpan bookings ke localStorage:", e);
     }

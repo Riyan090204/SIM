@@ -67,7 +67,31 @@ export default function InvoicePrintView({
       const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
 
       pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`Invoice-${invoice.nomorInvoice}.pdf`);
+
+      // Format Penamaan File Opsi A: Invoice_[STATUS]_[NAMA]_[NO-INVOICE].pdf
+      let statusSlug = "TAGIHAN";
+      if (invoice.status === "Lunas") {
+        statusSlug = "LUNAS";
+      } else if (invoice.status === "DP (Down Payment)") {
+        statusSlug = "DP";
+      } else if (invoice.status === "Belum Bayar") {
+        statusSlug = "BELUM_BAYAR";
+      } else if (invoice.status === "Dibatalkan") {
+        statusSlug = "BATAL";
+      }
+
+      // Bersihkan nama pemesan agar aman untuk sistem file
+      const cleanCustomer = (invoice.namaPemesan || "Tamu")
+        .trim()
+        .replace(/[^a-zA-Z0-9]/g, "_")
+        .replace(/_+/g, "_");
+
+      const cleanNomor = (invoice.nomorInvoice || "INV")
+        .trim()
+        .replace(/[^a-zA-Z0-9-]/g, "_");
+
+      const fileName = `Invoice_${statusSlug}_${cleanCustomer}_${cleanNomor}.pdf`;
+      pdf.save(fileName);
     } catch (error) {
       console.error("Gagal mengunduh PDF:", error);
       alert("Gagal mengunduh PDF. Silakan gunakan opsi Cetak.");
@@ -324,22 +348,18 @@ export default function InvoicePrintView({
                   <tr key={pkg.id || idx} className="border-b border-slate-200">
                     <td className="px-3 py-2 print:py-1.5">
                       <div className="font-bold text-slate-900">{pkg.nama}</div>
-                      {pkg.deskripsi && (
+                      {pkg.deskripsi && !pkg.deskripsi.includes("include guide") && pkg.deskripsi.trim() !== "" && (
                         <div className="text-[9px] print:text-[8px] text-slate-400 leading-tight mt-0.5 max-w-md">
                           {pkg.deskripsi}
                         </div>
                       )}
                     </td>
                     <td className="px-2 py-2 print:py-1.5 text-center font-semibold text-slate-700">
-                      {pkg.tipeHitungan === "non-satuan" ? (
-                        <span className="text-slate-300">—</span>
-                      ) : (
-                        <span>{pkg.qty} <span className="text-[9px] text-slate-400">Pax</span></span>
-                      )}
+                      <span>{pkg.qty && pkg.qty > 0 ? pkg.qty : 1} <span className="text-[9px] text-slate-400">Pax</span></span>
                     </td>
                     <td className="px-3 py-2 print:py-1.5 text-right font-medium text-slate-600">
                       {pkg.tipeHitungan === "non-satuan" ? (
-                        <span className="text-slate-300">—</span>
+                        <span className="text-slate-300 font-mono">—</span>
                       ) : (
                         formatRupiah(pkg.hargaSatuan)
                       )}

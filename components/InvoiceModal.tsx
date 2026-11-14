@@ -87,7 +87,7 @@ function getInitialInvoiceData(
       {
         id: `pkg-${Date.now()}-1`,
         nama: selectedBooking.pilihanPaket || "Paket Body Rafting Green Canyon",
-        deskripsi: `Paket wisata ${profile?.name || "wisata"} include guide, tiket masuk, peralatan, dan asuransi.`,
+        deskripsi: "",
         tipeHitungan: "satuan",
         qty: bkgQty,
         hargaSatuan: 200000,
@@ -106,7 +106,7 @@ function getInitialInvoiceData(
       emailPemesan: selectedBooking.email || "",
       paketLayanan: selectedBooking.pilihanPaket,
       tanggalPelaksanaan: selectedBooking.tanggalTrip,
-      deskripsi: `Paket wisata ${profile?.name || "wisata"} include guide, tiket masuk, peralatan, dan asuransi.`,
+      deskripsi: "",
       keterangan: `Booking #${selectedBooking.bookingCode} | Kendaraan: ${selectedBooking.nomorKendaraan || "-"}`,
       tipeHitungan: "satuan" as const,
       qty: bkgQty,
@@ -125,7 +125,7 @@ function getInitialInvoiceData(
     {
       id: `pkg-${Date.now()}-1`,
       nama: "Paket Body Rafting Green Canyon",
-      deskripsi: "Paket lengkap peralatan safety, pemandu lokal bersertifikat, perahu antar jemput, dan asuransi.",
+      deskripsi: "",
       tipeHitungan: "satuan",
       qty: 5,
       hargaSatuan: 225000,
@@ -144,7 +144,7 @@ function getInitialInvoiceData(
     nomorTeleponPemesan: "",
     paketLayanan: "Paket Body Rafting Green Canyon",
     tanggalPelaksanaan: new Date().toISOString().split("T")[0],
-    deskripsi: "Paket lengkap peralatan safety, pemandu lokal bersertifikat, perahu antar jemput, dan asuransi.",
+    deskripsi: "",
     keterangan: "",
     tipeHitungan: "satuan" as const,
     qty: 5,
@@ -220,10 +220,10 @@ export default function InvoiceModal({
         const updated = { ...item, [field]: value };
         if (field === "tipeHitungan") {
           if (value === "non-satuan") {
-            updated.qty = 0;
+            updated.qty = updated.qty && updated.qty > 0 ? updated.qty : 1;
             updated.hargaSatuan = 0;
           } else {
-            updated.qty = updated.qty || 1;
+            updated.qty = updated.qty && updated.qty > 0 ? updated.qty : 1;
           }
         }
         if (field === "qty" || field === "hargaSatuan" || field === "tipeHitungan") {
@@ -259,7 +259,7 @@ export default function InvoiceModal({
       {
         id: `pkg-${Date.now()}-1`,
         nama: b.pilihanPaket,
-        deskripsi: `Paket wisata ${profile.name} include guide, tiket masuk, peralatan, dan asuransi.`,
+        deskripsi: "",
         tipeHitungan: "satuan",
         qty: bkgQty,
         hargaSatuan: 200000,
@@ -268,7 +268,7 @@ export default function InvoiceModal({
     ]);
     setTanggal(new Date().toISOString().split("T")[0]);
     setKeterangan(`Booking #${b.bookingCode} | Kendaraan: ${b.nomorKendaraan || "-"}`);
-    setDeskripsi(`Paket wisata ${profile.name} include guide, tiket masuk, peralatan, dan asuransi.`);
+    setDeskripsi("");
     setTotalUangMasuk(0);
     setLabaBersih(250000);
   };
@@ -286,7 +286,7 @@ export default function InvoiceModal({
         {
           id: `pkg-${Date.now()}-1`,
           nama: parsed.pilihanPaket,
-          deskripsi: `Paket wisata ${profile.name} include guide, tiket masuk, peralatan, dan asuransi.`,
+          deskripsi: "",
           tipeHitungan: "satuan",
           qty: pQty,
           hargaSatuan: 200000,
@@ -314,7 +314,7 @@ export default function InvoiceModal({
       setStatus("DP (Down Payment)");
     }
 
-    setDeskripsi(`Paket wisata ${profile.name} include guide, tiket masuk, peralatan, dan asuransi.`);
+    setDeskripsi("");
   };
 
   const handleBookingSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -437,7 +437,7 @@ export default function InvoiceModal({
       .join(" + ") || primaryPkg.nama;
 
     const totalQty = paketItems.reduce(
-      (sum, p) => sum + (p.tipeHitungan === "satuan" ? Number(p.qty) || 0 : 0),
+      (sum, p) => sum + (Number(p.qty) || 0),
       0
     );
 
@@ -734,7 +734,7 @@ export default function InvoiceModal({
                         <button
                           type="button"
                           onClick={() => handleUpdatePackageItem(pkg.id, "tipeHitungan", "satuan")}
-                          className={`px-2 py-0.5 rounded font-medium transition-all ${
+                          className={`px-2.5 py-0.5 rounded font-medium transition-all ${
                             pkg.tipeHitungan === "satuan"
                               ? "bg-white text-teal-700 font-bold shadow-2xs"
                               : "text-slate-500 hover:text-slate-800"
@@ -745,13 +745,13 @@ export default function InvoiceModal({
                         <button
                           type="button"
                           onClick={() => handleUpdatePackageItem(pkg.id, "tipeHitungan", "non-satuan")}
-                          className={`px-2 py-0.5 rounded font-medium transition-all ${
+                          className={`px-2.5 py-0.5 rounded font-medium transition-all ${
                             pkg.tipeHitungan === "non-satuan"
                               ? "bg-white text-teal-700 font-bold shadow-2xs"
                               : "text-slate-500 hover:text-slate-800"
                           }`}
                         >
-                          Borongan (-)
+                          Rombongan
                         </button>
                       </div>
 
@@ -779,7 +779,7 @@ export default function InvoiceModal({
                         required
                         value={pkg.nama}
                         onChange={(e) => handleUpdatePackageItem(pkg.id, "nama", e.target.value)}
-                        placeholder="Contoh: Paket Body Rafting Green Canyon / Sewa Jetski"
+                        placeholder="Contoh: Single Paddle + Drone / Paket Body Rafting"
                         className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:bg-white focus:outline-teal-600 text-xs font-semibold"
                       />
                     </div>
@@ -832,10 +832,31 @@ export default function InvoiceModal({
                       </>
                     ) : (
                       <>
-                        {/* Non-satuan / Borongan Total */}
-                        <div className="sm:col-span-4">
+                        {/* Mode Rombongan: Qty tetap ada, harga satuan tidak ada, langsung total harga */}
+                        <div className="sm:col-span-2">
+                          <label className="block text-slate-600 mb-1 text-xs">
+                            Qty (Pax/Org) <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="number"
+                            min="1"
+                            required
+                            value={pkg.qty === 0 ? "" : pkg.qty}
+                            placeholder="1"
+                            onChange={(e) =>
+                              handleUpdatePackageItem(
+                                pkg.id,
+                                "qty",
+                                e.target.value === "" ? 0 : Math.max(0, parseInt(e.target.value) || 0)
+                              )
+                            }
+                            className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:bg-white focus:outline-teal-600 text-xs font-bold text-center"
+                          />
+                        </div>
+
+                        <div className="sm:col-span-2">
                           <label className="block text-teal-900 font-bold mb-1 text-xs">
-                            Total Harga Borongan (Rp) <span className="text-red-500">*</span>
+                            Total Harga (Rp) <span className="text-red-500">*</span>
                           </label>
                           <input
                             type="number"

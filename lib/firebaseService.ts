@@ -10,20 +10,10 @@ import {
 import { db, isFirebaseConfigured } from "./firebase";
 import { Booking, Invoice } from "@/types";
 
-// Helper untuk membersihkan nilai `undefined` agar Firestore tidak error
+// Helper untuk membersihkan nilai `undefined` secara mendalam (deep clean) agar Firestore tidak menolak data
 function sanitizeForFirestore<T extends object>(data: T): Record<string, unknown> {
-  const result: Record<string, unknown> = {};
-  for (const [key, value] of Object.entries(data)) {
-    if (value === undefined) {
-      continue;
-    }
-    if (value !== null && typeof value === "object" && !Array.isArray(value)) {
-      result[key] = sanitizeForFirestore(value as object);
-    } else {
-      result[key] = value;
-    }
-  }
-  return result;
+  // JSON serialization otomatis membuang semua property yang bernilai undefined baik di root, nested object, maupun di dalam array
+  return JSON.parse(JSON.stringify(data));
 }
 
 /* ========================================================
