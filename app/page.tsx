@@ -44,6 +44,7 @@ export default function Home() {
 
   // Modal states
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
+  const [modalSessionId, setModalSessionId] = useState(0);
   const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
   const [selectedBookingForInvoice, setSelectedBookingForInvoice] = useState<Booking | null>(null);
   const [viewingInvoice, setViewingInvoice] = useState<Invoice | null>(null);
@@ -68,14 +69,16 @@ export default function Home() {
       setIsLoaded(true);
     }, 1500);
 
+    const isHub = !user?.email || user.email.toLowerCase().trim() === "pangandaranwisata09@gmail.com" || user.email.toLowerCase().trim() === "pangandaranhub@gmail.com";
+
     // Muat data lokal secara aman
     const localTimer = setTimeout(() => {
       let localB: Booking[] = [];
       let localI: Invoice[] = [];
       try {
         const uKey = user?.email ? `_${user.email.replace(/[^a-zA-Z0-9]/g, "_")}` : "";
-        const storedBookings = localStorage.getItem(`pangandaranhub_bookings${uKey}`) || localStorage.getItem("pangandaranhub_bookings");
-        const storedInvoices = localStorage.getItem(`pangandaranhub_invoices${uKey}`) || localStorage.getItem("pangandaranhub_invoices");
+        const storedBookings = localStorage.getItem(`pangandaranhub_bookings${uKey}`) || (isHub ? localStorage.getItem("pangandaranhub_bookings") : null);
+        const storedInvoices = localStorage.getItem(`pangandaranhub_invoices${uKey}`) || (isHub ? localStorage.getItem("pangandaranhub_invoices") : null);
         const dummyIds = ["inv-1", "inv-2", "inv-3", "bkg-1", "bkg-2", "bkg-3"];
 
         if (storedBookings) {
@@ -97,15 +100,15 @@ export default function Home() {
       // MODE FIREBASE: Aktifkan Realtime Listener
       unsubBookings = subscribeBookings(
         (data) => {
-          if (data && data.length > 0) {
-            setBookings(data);
-            try {
-              const uKey = user?.email ? `_${user.email.replace(/[^a-zA-Z0-9]/g, "_")}` : "";
-              localStorage.setItem(`pangandaranhub_bookings${uKey}`, JSON.stringify(data));
-              localStorage.setItem("pangandaranhub_bookings", JSON.stringify(data));
-            } catch (e) {
-              console.error("Gagal update localStorage dari Firestore:", e);
+          setBookings(data || []);
+          try {
+            const uKey = user?.email ? `_${user.email.replace(/[^a-zA-Z0-9]/g, "_")}` : "";
+            localStorage.setItem(`pangandaranhub_bookings${uKey}`, JSON.stringify(data || []));
+            if (isHub) {
+              localStorage.setItem("pangandaranhub_bookings", JSON.stringify(data || []));
             }
+          } catch (e) {
+            console.error("Gagal update localStorage dari Firestore:", e);
           }
           setIsLoaded(true);
           setFirestoreError(null);
@@ -120,15 +123,15 @@ export default function Home() {
 
       unsubInvoices = subscribeInvoices(
         (data) => {
-          if (data && data.length > 0) {
-            setInvoices(data);
-            try {
-              const uKey = user?.email ? `_${user.email.replace(/[^a-zA-Z0-9]/g, "_")}` : "";
-              localStorage.setItem(`pangandaranhub_invoices${uKey}`, JSON.stringify(data));
-              localStorage.setItem("pangandaranhub_invoices", JSON.stringify(data));
-            } catch (e) {
-              console.error("Gagal update localStorage dari Firestore:", e);
+          setInvoices(data || []);
+          try {
+            const uKey = user?.email ? `_${user.email.replace(/[^a-zA-Z0-9]/g, "_")}` : "";
+            localStorage.setItem(`pangandaranhub_invoices${uKey}`, JSON.stringify(data || []));
+            if (isHub) {
+              localStorage.setItem("pangandaranhub_invoices", JSON.stringify(data || []));
             }
+          } catch (e) {
+            console.error("Gagal update localStorage dari Firestore:", e);
           }
           setIsLoaded(true);
           setFirestoreError(null);
@@ -155,9 +158,12 @@ export default function Home() {
     if (!isLoaded || !user) return;
     try {
       const uKey = user?.email ? `_${user.email.replace(/[^a-zA-Z0-9]/g, "_")}` : "";
+      const isHub = !user?.email || user.email.toLowerCase().trim() === "pangandaranwisata09@gmail.com" || user.email.toLowerCase().trim() === "pangandaranhub@gmail.com";
       if (invoices.length > 0) {
         localStorage.setItem(`pangandaranhub_invoices${uKey}`, JSON.stringify(invoices));
-        localStorage.setItem("pangandaranhub_invoices", JSON.stringify(invoices));
+        if (isHub) {
+          localStorage.setItem("pangandaranhub_invoices", JSON.stringify(invoices));
+        }
       }
     } catch (e) {
       console.error("Gagal menyimpan invoices ke localStorage:", e);
@@ -168,9 +174,12 @@ export default function Home() {
     if (!isLoaded || !user) return;
     try {
       const uKey = user?.email ? `_${user.email.replace(/[^a-zA-Z0-9]/g, "_")}` : "";
+      const isHub = !user?.email || user.email.toLowerCase().trim() === "pangandaranwisata09@gmail.com" || user.email.toLowerCase().trim() === "pangandaranhub@gmail.com";
       if (bookings.length > 0) {
         localStorage.setItem(`pangandaranhub_bookings${uKey}`, JSON.stringify(bookings));
-        localStorage.setItem("pangandaranhub_bookings", JSON.stringify(bookings));
+        if (isHub) {
+          localStorage.setItem("pangandaranhub_bookings", JSON.stringify(bookings));
+        }
       }
     } catch (e) {
       console.error("Gagal menyimpan bookings ke localStorage:", e);
@@ -218,6 +227,16 @@ export default function Home() {
         alert("Peringatan: Gagal tersambung ke Cloud Firestore. Data tetap disimpan di browser ini. Pastikan tab Rules di Firebase Console sudah di-publish!");
       }
     }
+
+    // Reset state modal agar invoice berikutnya tidak tertimpa
+    setEditingInvoice(null);
+    setSelectedBookingForInvoice(null);
+  };
+
+  const handleCloseInvoiceModal = () => {
+    setIsInvoiceModalOpen(false);
+    setEditingInvoice(null);
+    setSelectedBookingForInvoice(null);
   };
 
   const handleDeleteInvoice = async (id: string) => {
@@ -240,6 +259,7 @@ export default function Home() {
   const handleOpenCreateInvoice = () => {
     setEditingInvoice(null);
     setSelectedBookingForInvoice(null);
+    setModalSessionId((prev) => prev + 1);
     setIsInvoiceModalOpen(true);
   };
 
@@ -450,9 +470,9 @@ export default function Home() {
       {/* Invoice Create / Edit Modal */}
       {isInvoiceModalOpen && (
         <InvoiceModal
-          key={editingInvoice?.id || selectedBookingForInvoice?.id || "new-invoice"}
+          key={editingInvoice?.id ? `edit-${editingInvoice.id}` : selectedBookingForInvoice?.id ? `bkg-${selectedBookingForInvoice.id}` : `new-${modalSessionId}`}
           isOpen={isInvoiceModalOpen}
-          onClose={() => setIsInvoiceModalOpen(false)}
+          onClose={handleCloseInvoiceModal}
           onSave={handleSaveInvoice}
           initialInvoice={editingInvoice}
           bookings={bookings}

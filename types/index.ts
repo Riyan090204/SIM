@@ -100,7 +100,7 @@ export interface CompanyProfile {
 export const PANGANDARAN_HUB_PROFILE: CompanyProfile = {
   name: "PangandaranHub",
   tagline: "Your Ultimate Pangandaran Tour & Travel Partner",
-  address: "Parakanmanggu, Kec. Parigi, Kab. Pangandaran, Kabupaten Ciamis, Jawa Barat 46393, Indonesia",
+  address: "Parakanmanggu, Kec. Parigi, Kab. Pangandaran, Jawa Barat 46393",
   phone: "08817742021",
   email: "pangandaranhub@gmail.com",
   website: "pangandaranhub.com",

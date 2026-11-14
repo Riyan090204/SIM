@@ -22,9 +22,9 @@ export const ACCOUNT_PROFILES: Record<string, AccountProfile> = {
     name: "PangandaranHub",
     brandSubtitle: "Tour & Travel Organizer",
     tagline: "Your Ultimate Pangandaran Tour & Travel Partner",
-    address: "Parakanmanggu, Kec. Parigi, Kab. Pangandaran, Kabupaten Ciamis, Jawa Barat 46393, Indonesia",
+    address: "Parakanmanggu, Kec. Parigi, Kab. Pangandaran, Jawa Barat 46393",
     phone: "08817742021",
-    email: "pangandaranwisata09@gmail.com",
+    email: "pangandaranhub@gmail.com",
     website: "pangandaranhub.com",
     invoicePrefix: "PH",
     bankName: "BCA",
@@ -45,7 +45,7 @@ export const ACCOUNT_PROFILES: Record<string, AccountProfile> = {
     name: "Pangandaran Naturally",
     brandSubtitle: "Tour & Travel Organizer",
     tagline: "Your Ultimate Pangandaran Travel Partner",
-    address: "Pangandaran, Jawa Barat, Indonesia",
+    address: "Dusun Pasirkiara, Desa Karangbenda, Kab. Pangandaran, Jawa Barat 46393",
     phone: "085703197566",
     email: "pangandarannaturally@gmail.com",
     website: "",
@@ -69,6 +69,9 @@ export const ACCOUNT_PROFILES: Record<string, AccountProfile> = {
 export function getAccountProfile(email?: string | null): AccountProfile {
   if (!email) return ACCOUNT_PROFILES["pangandaranwisata09@gmail.com"];
   const key = email.toLowerCase().trim();
+  if (key === "pangandaranhub@gmail.com") {
+    return ACCOUNT_PROFILES["pangandaranwisata09@gmail.com"];
+  }
   return ACCOUNT_PROFILES[key] || ACCOUNT_PROFILES["pangandaranwisata09@gmail.com"];
 }
 

@@ -44,16 +44,16 @@ function getInitialInvoiceData(
       initialInvoice.paketItems && initialInvoice.paketItems.length > 0
         ? initialInvoice.paketItems
         : [
-            {
-              id: `pkg-${Date.now()}-1`,
-              nama: initialInvoice.paketLayanan || "Paket Wisata",
-              deskripsi: initialInvoice.deskripsi || "",
-              tipeHitungan: initialInvoice.tipeHitungan || "satuan",
-              qty: initialInvoice.qty || 1,
-              hargaSatuan: initialInvoice.hargaSatuan || 0,
-              total: initialInvoice.total || (initialInvoice.qty || 1) * (initialInvoice.hargaSatuan || 0),
-            },
-          ];
+          {
+            id: `pkg-${Date.now()}-1`,
+            nama: initialInvoice.paketLayanan || "Paket Wisata",
+            deskripsi: initialInvoice.deskripsi || "",
+            tipeHitungan: initialInvoice.tipeHitungan || "satuan",
+            qty: initialInvoice.qty || 1,
+            hargaSatuan: initialInvoice.hargaSatuan || 0,
+            total: initialInvoice.total || (initialInvoice.qty || 1) * (initialInvoice.hargaSatuan || 0),
+          },
+        ];
 
     return {
       nomorInvoice: initialInvoice.nomorInvoice || "",
@@ -734,22 +734,20 @@ export default function InvoiceModal({
                         <button
                           type="button"
                           onClick={() => handleUpdatePackageItem(pkg.id, "tipeHitungan", "satuan")}
-                          className={`px-2.5 py-0.5 rounded font-medium transition-all ${
-                            pkg.tipeHitungan === "satuan"
+                          className={`px-2.5 py-0.5 rounded font-medium transition-all ${pkg.tipeHitungan === "satuan"
                               ? "bg-white text-teal-700 font-bold shadow-2xs"
                               : "text-slate-500 hover:text-slate-800"
-                          }`}
+                            }`}
                         >
                           per Pax
                         </button>
                         <button
                           type="button"
                           onClick={() => handleUpdatePackageItem(pkg.id, "tipeHitungan", "non-satuan")}
-                          className={`px-2.5 py-0.5 rounded font-medium transition-all ${
-                            pkg.tipeHitungan === "non-satuan"
+                          className={`px-2.5 py-0.5 rounded font-medium transition-all ${pkg.tipeHitungan === "non-satuan"
                               ? "bg-white text-teal-700 font-bold shadow-2xs"
                               : "text-slate-500 hover:text-slate-800"
-                          }`}
+                            }`}
                         >
                           Rombongan
                         </button>

@@ -29,7 +29,7 @@ export function subscribeBookings(
   currentUserEmail?: string | null
 ): Unsubscribe {
   if (!db || !isFirebaseConfigured) {
-    return () => {};
+    return () => { };
   }
 
   try {
@@ -39,13 +39,19 @@ export function subscribeBookings(
       (snapshot) => {
         const bookings: Booking[] = [];
         const normEmail = (currentUserEmail || "").toLowerCase().trim();
+        const isNaturally = normEmail === "pangandarannaturally@gmail.com";
+        const isHub = normEmail === "pangandaranwisata09@gmail.com" || normEmail === "pangandaranhub@gmail.com" || !normEmail;
+
         snapshot.forEach((docSnap) => {
           const item = { id: docSnap.id, ...docSnap.data() } as Booking;
           const itemEmail = (item.userEmail || "").toLowerCase().trim();
+          const itemIsNaturally = itemEmail === "pangandarannaturally@gmail.com";
+          const itemIsHub = itemEmail === "pangandaranwisata09@gmail.com" || itemEmail === "pangandaranhub@gmail.com" || !itemEmail;
 
           const belongsToCurrent =
-            itemEmail === normEmail ||
-            (!itemEmail && (normEmail === "pangandaranwisata09@gmail.com" || !normEmail));
+          (isNaturally && itemIsNaturally) ||
+            (isHub && itemIsHub) ||
+            (!isNaturally && !isHub && itemEmail === normEmail);
 
           if (belongsToCurrent) {
             bookings.push(item);
@@ -63,7 +69,7 @@ export function subscribeBookings(
     );
   } catch (error) {
     console.error("Gagal membuat query bookings:", error);
-    return () => {};
+    return () => { };
   }
 }
 
@@ -111,7 +117,7 @@ export function subscribeInvoices(
   currentUserEmail?: string | null
 ): Unsubscribe {
   if (!db || !isFirebaseConfigured) {
-    return () => {};
+    return () => { };
   }
 
   try {
@@ -125,12 +131,18 @@ export function subscribeInvoices(
           const item = { id: docSnap.id, ...docSnap.data() } as Invoice;
           const itemEmail = (item.userEmail || "").toLowerCase().trim();
           const isNaturally = normEmail === "pangandarannaturally@gmail.com";
-          const isHub = normEmail === "pangandaranwisata09@gmail.com" || !normEmail;
+          const isHub = normEmail === "pangandaranwisata09@gmail.com" || normEmail === "pangandaranhub@gmail.com" || !normEmail;
+          const itemIsNaturally = itemEmail === "pangandarannaturally@gmail.com" || (item.nomorInvoice?.includes("-PN-") || false);
+          const itemIsHub =
+            itemEmail === "pangandaranwisata09@gmail.com" ||
+            itemEmail === "pangandaranhub@gmail.com" ||
+            (!itemEmail && !itemIsNaturally) ||
+            (item.nomorInvoice?.includes("-PH-") || false);
 
           const belongsToCurrent =
-            itemEmail === normEmail ||
-            (isNaturally && (item.nomorInvoice?.includes("-PN-") || false)) ||
-            (isHub && (!itemEmail || item.nomorInvoice?.includes("-PH-")));
+          (isNaturally && itemIsNaturally) ||
+            (isHub && itemIsHub) ||
+            (!isNaturally && !isHub && itemEmail === normEmail);
 
           if (belongsToCurrent) {
             invoices.push(item);
@@ -148,7 +160,7 @@ export function subscribeInvoices(
     );
   } catch (error) {
     console.error("Gagal membuat query invoices:", error);
-    return () => {};
+    return () => { };
   }
 }
 
