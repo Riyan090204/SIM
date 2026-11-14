@@ -21,7 +21,7 @@ import {
   deleteInvoiceFromFirestore,
   syncLocalDataToFirestore,
 } from "@/lib/firebaseService";
-import { Compass, Cloud, Database, RefreshCw, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Compass, Cloud, Database, RefreshCw, CheckCircle2, AlertTriangle, AlertCircle } from "lucide-react";
 
 
 export default function Home() {
@@ -49,6 +49,14 @@ export default function Home() {
   const [selectedBookingForInvoice, setSelectedBookingForInvoice] = useState<Booking | null>(null);
   const [viewingInvoice, setViewingInvoice] = useState<Invoice | null>(null);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
+
+  const showToast = (text: string, type: "success" | "error" = "success") => {
+    setToastMessage({ text, type });
+    setTimeout(() => {
+      setToastMessage(null);
+    }, 3500);
+  };
 
   // 1. Initial Load & Realtime Subscriptions (hanya aktif jika user sudah login)
   useEffect(() => {
@@ -228,6 +236,8 @@ export default function Home() {
       }
     }
 
+    showToast(`Invoice ${saved.nomorInvoice} berhasil disimpan!`);
+
     // Reset state modal agar invoice berikutnya tidak tertimpa
     setEditingInvoice(null);
     setSelectedBookingForInvoice(null);
@@ -246,6 +256,7 @@ export default function Home() {
       try {
         await deleteInvoiceFromFirestore(id);
         if (viewingInvoice?.id === id) setViewingInvoice(null);
+        showToast("Invoice berhasil dihapus.", "error");
       } catch (err) {
         console.error("Gagal hapus invoice dari Firestore:", err);
         alert("Gagal menghapus dari Firestore.");
@@ -253,6 +264,7 @@ export default function Home() {
     } else {
       setInvoices((prev) => prev.filter((inv) => inv.id !== id));
       if (viewingInvoice?.id === id) setViewingInvoice(null);
+      showToast("Invoice berhasil dihapus.", "error");
     }
   };
 
@@ -290,6 +302,8 @@ export default function Home() {
         alert("Peringatan: Gagal tersambung ke Cloud Firestore. Data tetap disimpan di browser ini. Pastikan tab Rules di Firebase Console sudah di-publish!");
       }
     }
+
+    showToast(`Booking ${saved.bookingCode} (${saved.namaPemesan}) berhasil disimpan!`);
   };
 
   const handleDeleteBooking = async (id: string) => {
@@ -298,12 +312,14 @@ export default function Home() {
     if (isFirebaseConfigured) {
       try {
         await deleteBookingFromFirestore(id);
+        showToast("Booking berhasil dihapus.", "error");
       } catch (err) {
         console.error("Gagal hapus booking dari Firestore:", err);
         alert("Gagal menghapus booking dari Firestore.");
       }
     } else {
       setBookings((prev) => prev.filter((b) => b.id !== id));
+      showToast("Booking berhasil dihapus.", "error");
     }
   };
 
@@ -336,7 +352,19 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-teal-500 selection:text-white">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-teal-500 selection:text-white relative">
+
+      {/* Toast Notification (Floating at top for mobile & desktop) */}
+      {toastMessage && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-2.5 px-4 py-2.5 rounded-xl shadow-2xl bg-slate-900/95 backdrop-blur-md text-white text-xs sm:text-sm font-semibold border border-slate-700/80 animate-in fade-in slide-in-from-top-4 duration-200">
+          {toastMessage.type === "success" ? (
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+          ) : (
+            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+          )}
+          <span>{toastMessage.text}</span>
+        </div>
+      )}
 
       {/* Navigation Header */}
       <Navbar
